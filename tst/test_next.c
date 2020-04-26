@@ -10,9 +10,19 @@
 
 #include "test.h"
 
-#define EXPECTED_UINT32_ENTRIES 512
+#define EXPECTED_STREAM_ELEMENTS 512
 
-const static uint32_t expected_random_stream[EXPECTED_UINT32_ENTRIES] = {
+/*
+ * This is the stream of uint32 values obtained by calling isaac_next()
+ * repeatedly after the isaac_ctx_t has been initialised with a zero seed.
+ *
+ * The value is obtained from the ISAAC's author website
+ * https://www.burtleburtle.net/bob/rand/randvect.txt
+ * and could be obtained from the reference implementation by
+ * compiling any version (e.g. rand.c or randport.c) with the -DNEVER flag
+ * and running it, as it sets a zero seed.
+ */
+const static uint32_t expected_zero_seed_stream[EXPECTED_STREAM_ELEMENTS] = {
         0xF650E4C8UL, 0xE448E96DUL, 0x98DB2FB4UL, 0xF5FAD54FUL, 0x433F1AFBUL,
         0xEDEC154AUL, 0xD8370487UL, 0x46CA4F9AUL, 0x5DE3743EUL, 0x88381097UL,
         0xF1D444EBUL, 0x823CEDB6UL, 0x6A83E1E0UL, 0x4A5F6355UL, 0xC7442433UL,
@@ -118,25 +128,35 @@ const static uint32_t expected_random_stream[EXPECTED_UINT32_ENTRIES] = {
         0x9D855E89UL, 0x4BB5AF29UL,
 };
 
-static uint32_t result[EXPECTED_UINT32_ENTRIES];
-
-static void test_next_against_reference_vector(void)
+static void test_next_once(void)
 {
     isaac_ctx_t ctx;
-    memset(result, 0, EXPECTED_UINT32_ENTRIES);
+    memset(&ctx, 0, sizeof(ctx)); // Zero seed
+    isaac_init(&ctx, true);
+
+    const uint32_t next = isaac_next(&ctx);
+
+    atto_eq(next, expected_zero_seed_stream[0]);
+}
+
+static void test_next_all(void)
+{
+    uint32_t result;
+    isaac_ctx_t ctx;
     memset(&ctx, 0, sizeof(ctx));
     isaac_init(&ctx, true);
     printf("i = ");
-    for (uint_fast32_t i = 0; i < EXPECTED_UINT32_ENTRIES; i++)
+    for (uint_fast32_t i = 0; i < EXPECTED_STREAM_ELEMENTS; i++)
     {
-        result[i] = isaac_next(&ctx);
+        result = isaac_next(&ctx);
         printf("\r%3"PRIu32" | ", i);
-        atto_eq(result[i], expected_random_stream[i]);
+        atto_eq(result, expected_zero_seed_stream[i]);
     }
     puts("");
 }
 
 void test_isaac_next(void)
 {
+    test_next_once();
     test_next_against_reference_vector();
 }

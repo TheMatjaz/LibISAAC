@@ -188,7 +188,7 @@ const static uint8_t expected_initialised_ctx[] = {
 static void test_init_against_reference(void)
 {
     isaac_ctx_t ctx;
-    memset(&ctx, 0, sizeof(ctx));
+    memset(ctx.rsl, 0, ISAAC_SIZE);  // Zero seed
 
     isaac_init(&ctx, true);
 

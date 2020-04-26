@@ -48,11 +48,10 @@ typedef struct {
     uint32_t c;
 } isaac_ctx_t;
 
-//  If (flag==TRUE), then use the contents of randrsl[0..RANDSIZ-1] as the seed.
 /**
  * Initialises the ISAAC CPRNG.
  *
- * Uses the `rsl` field as initial seed
+ * Uses the `rsl` field as initial seed if the flag is TRUE. Otherwise ???
  *
  * @param ctx
  * @param flag
