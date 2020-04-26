@@ -319,7 +319,7 @@ static void test_next8_all(void)
 static void test_next32_a_few_with_nonzero_seed(void)
 {
     isaac_ctx_t ctx;
-    const uint8_t seed[8] = {1,2,3,4,5,6,7,8};
+    const uint8_t seed[8] = {1, 2, 3, 4, 5, 6, 7, 8};
     isaac_init(&ctx, seed, 8);
     uint32_t next;
 
@@ -337,7 +337,7 @@ static void test_next32_all_with_nonzero_seed(void)
 {
     uint32_t result;
     isaac_ctx_t ctx;
-    const uint8_t seed[8] = {1,2,3,4,5,6,7,8};
+    const uint8_t seed[8] = {1, 2, 3, 4, 5, 6, 7, 8};
     isaac_init(&ctx, seed, 8);
     for (uint_fast32_t i = 0; i < EXPECTED_NEXT_ELEMENTS; i++)
     {

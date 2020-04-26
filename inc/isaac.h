@@ -40,7 +40,8 @@ extern "C"
 #include <string.h>
 
 #define ISAAC_U32_ELEMENTS 256U
-#define ISAAC_SEED_MAX_BYTES (ISAAC_U32_ELEMENTS * sizeof(uint32_t))
+#define ISAAC_U8_ELEMENTS (ISAAC_U32_ELEMENTS * sizeof(uint32_t))
+#define ISAAC_SEED_MAX_BYTES ISAAC_U8_ELEMENTS
 
 /**
  * Context of the ISAAC CPRNG.
@@ -87,10 +88,10 @@ void isaac_init(isaac_ctx_t* ctx, const void* seed, uint16_t seed_bytes);
 /**
  * Provides the next pseudo-random 32-bit integer.
  *
- * After #ISAAC_ELEMENTS calls it will automatically reshuffle the ISAAC state
- * to provide #ISAAC_ELEMENTS new elements. This means that #ISAAC_ELEMENTS
- * calls are very cheap (just reading the uint32_t value from the state),
- * and the #ISAAC_ELEMENTS+1 call is expensive.
+ * After #ISAAC_U32_ELEMENTS calls it will automatically reshuffle the ISAAC
+ * state to provide #ISAAC_U32_ELEMENTS new elements. This means that
+ * #ISAAC_U32_ELEMENTS calls are very cheap (just reading the uint32_t value
+ * from the state), and the #ISAAC_U32_ELEMENTS+1st call is expensive.
  *
  * @warning
  * **Use either isaac_next32() or isaac_next8(), never both**, especially not
@@ -104,8 +105,27 @@ void isaac_init(isaac_ctx_t* ctx, const void* seed, uint16_t seed_bytes);
  */
 uint32_t isaac_next32(isaac_ctx_t* ctx);
 
-// Compared to the next32, this provides the bytes in little endian order
-// DO NOT MIX USAGE OF NEXT8 and NEXT32
+/**
+ * Provides the next pseudo-random byte.
+ *
+ * Basically provides the isaac_next32() output byte-by-byte. The order
+ * of the bytes is from (uint32_t*)[0] to (uint32_t*)[3].
+ *
+ * After #ISAAC_U8_ELEMENTS calls it will automatically reshuffle the ISAAC
+ * state to provide #ISAAC_U8_ELEMENTS new elements. This means that
+ * #ISAAC_U8_ELEMENTS calls are very cheap (just reading the uint8_t value
+ * from the state), and the #ISAAC_U8_ELEMENTS+1st call is expensive.
+ *
+ * @warning
+ * **Use either isaac_next32() or isaac_next8(), never both**, especially not
+ * in an interleaved manner. The issue is that isaac_next8() reads bytes
+ * from the isaac_next32() output; this means that calling isaac_next8() and
+ * then isaac_next32() will produce the same byte twice, which is **unsecure**
+ * and predictable.
+ *
+ * @param ctx the ISAAC state, already initialised.
+ * @return a pseudo-random byte.
+ */
 uint8_t isaac_next8(isaac_ctx_t* ctx);
 
 
