@@ -81,8 +81,11 @@ static void next_values_nonzero_seed(void)
     randctx ctx;
     unsigned long int i;
     unsigned long int next;
-    ctx.randrsl[0] = 0x01020304UL;
-    ctx.randrsl[1] = 0x05060708UL;
+    const unsigned char seed[8] = {1,2,3,4,5,6,7,8};
+    for (i = 0; i < 8; i++)
+    {
+        ((unsigned char*) ctx.randrsl)[i] = seed[i];
+    }
     for (i = 2; i < 256; i++)
     {
         ctx.randrsl[i] = 0;  // Zero padding
