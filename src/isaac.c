@@ -46,7 +46,7 @@ static void isaac_shuffle(isaac_ctx_t* ctx);
 
 void isaac_init(isaac_ctx_t* const ctx,
                 const void* const seed,
-                const uint16_t seed_bytes)
+                uint16_t seed_bytes)
 {
     uint32_t a, b, c, d, e, f, g, h;
     unsigned int i; /* Fastest integer type */
@@ -59,27 +59,20 @@ void isaac_init(isaac_ctx_t* const ctx,
     {
         ISAAC_MIX(a, b, c, d, e, f, g, h);
     }
-    if (seed != NULL)
+    memset(ctx->result, 0, ISAAC_SEED_MAX_BYTES);
+    if (seed != NULL && seed_bytes > 0)
     {
-        /* Copy seed into result[] with zero-padding. */
-        if (seed_bytes >= ISAAC_SEED_MAX_BYTES)
+        /* Copy seed into result[]. */
+        if (seed_bytes > ISAAC_SEED_MAX_BYTES)
         {
-            memcpy(ctx->result, seed, ISAAC_SEED_MAX_BYTES);
+            seed_bytes = ISAAC_SEED_MAX_BYTES;
         }
-        else
-        {
-            memcpy(ctx->result, seed, seed_bytes);
-            memset(&ctx->result[seed_bytes], 0, ISAAC_SEED_MAX_BYTES - seed_bytes);
-        }
-    }
-    else
-    {
-        memset(&ctx->result[seed_bytes], 0, ISAAC_SEED_MAX_BYTES);
+        memcpy(ctx->result, seed, seed_bytes);
     }
     /* Initialise using the contents of result[] as the seed. */
     for (i = 0; i < ISAAC_U32_ELEMENTS; i += 8)
     {
-        a += ctx->result[i];
+        a += ctx->result[i + 0];
         b += ctx->result[i + 1];
         c += ctx->result[i + 2];
         d += ctx->result[i + 3];
@@ -88,7 +81,7 @@ void isaac_init(isaac_ctx_t* const ctx,
         g += ctx->result[i + 6];
         h += ctx->result[i + 7];
         ISAAC_MIX(a, b, c, d, e, f, g, h);
-        ctx->mem[i] = a;
+        ctx->mem[i + 0] = a;
         ctx->mem[i + 1] = b;
         ctx->mem[i + 2] = c;
         ctx->mem[i + 3] = d;
@@ -100,7 +93,7 @@ void isaac_init(isaac_ctx_t* const ctx,
     /* Do a second pass to make all of the seed affect all of ctx->mem. */
     for (i = 0; i < ISAAC_U32_ELEMENTS; i += 8)
     {
-        a += ctx->mem[i];
+        a += ctx->mem[i + 0];
         b += ctx->mem[i + 1];
         c += ctx->mem[i + 2];
         d += ctx->mem[i + 3];
@@ -109,7 +102,7 @@ void isaac_init(isaac_ctx_t* const ctx,
         g += ctx->mem[i + 6];
         h += ctx->mem[i + 7];
         ISAAC_MIX(a, b, c, d, e, f, g, h);
-        ctx->mem[i] = a;
+        ctx->mem[i + 0] = a;
         ctx->mem[i + 1] = b;
         ctx->mem[i + 2] = c;
         ctx->mem[i + 3] = d;

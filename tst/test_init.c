@@ -152,7 +152,7 @@ const static isaac_ctx_t zero_initialised_ctx = {
 
 const static isaac_ctx_t nonzero_initialised_ctx = {
         .next32_index = ISAAC_U32_ELEMENTS - 1,
-        .next8_index = 0 - 1,
+        .next8_index = 0,
         .a = 0x3FCFDFDAUL,
         .b = 0xC987111FUL,
         .c = 0x00000001UL,

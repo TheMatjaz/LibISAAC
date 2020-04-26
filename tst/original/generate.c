@@ -70,7 +70,7 @@ static void ctx_nonzero_seed(void)
     {
         ctx.randrsl[i] = 0;  // Zero padding
     }
-    randinit(&ctx, 1); // Init ISAAC with a non-zero seed
+    randinit(&ctx, 1);  // Init ISAAC with a non-zero seed
     puts("Context with seed {1,2,3,4,5,6,7,8}:");
     print_ctx(&ctx);
 }

@@ -55,8 +55,8 @@ typedef struct
     uint32_t a;
     uint32_t b;
     uint32_t c;
-    uint16_t next32_index;  // cound be uint8
-    uint16_t next8_index; // cound be uint8
+    uint16_t next32_index;
+    uint16_t next8_index;
 } isaac_ctx_t;
 
 /**
