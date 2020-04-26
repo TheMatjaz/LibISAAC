@@ -141,8 +141,7 @@ const static uint32_t expected_next_results[EXPECTED_NEXT_ELEMENTS] = {
 static void test_next32_a_few(void)
 {
     isaac_ctx_t ctx;
-    memset(&ctx, 0, sizeof(ctx)); // Zero seed
-    isaac_init(&ctx, true);
+    isaac_init(&ctx, NULL, 0);  // Zero seed
     uint32_t next;
 
     next = isaac_next32(&ctx);
@@ -159,8 +158,7 @@ static void test_next32_all(void)
 {
     uint32_t result;
     isaac_ctx_t ctx;
-    memset(&ctx, 0, sizeof(ctx));
-    isaac_init(&ctx, true);
+    isaac_init(&ctx, NULL, 0);  // Zero seed
     for (uint_fast32_t i = 0; i < EXPECTED_NEXT_ELEMENTS; i++)
     {
         result = isaac_next32(&ctx);
@@ -171,8 +169,7 @@ static void test_next32_all(void)
 static void test_next8_four_times(void)
 {
     isaac_ctx_t ctx;
-    memset(&ctx, 0, sizeof(ctx)); // Zero seed
-    isaac_init(&ctx, true);
+    isaac_init(&ctx, NULL, 0);  // Zero seed
     uint8_t next;
 
     next = isaac_next8(&ctx);
@@ -207,8 +204,7 @@ static void test_next8_all(void)
 {
     uint8_t result;
     isaac_ctx_t ctx;
-    memset(&ctx, 0, sizeof(ctx));
-    isaac_init(&ctx, true);
+    isaac_init(&ctx, NULL, 0);  // Zero seed
     for (uint_fast32_t i = 0; i < EXPECTED_NEXT_ELEMENTS; i++)
     {
         for (uint_fast8_t byte = 0; byte < 4; byte++)

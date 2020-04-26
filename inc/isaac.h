@@ -37,9 +37,10 @@ extern "C"
 #define LIBISAAC_VERSION "1.0.0"
 
 #include <stdint.h>
-#include <stdbool.h>
+#include <string.h>
 
 #define ISAAC_U32_ELEMENTS 256U
+#define ISAAC_SEED_MAX_BYTES (ISAAC_U32_ELEMENTS * sizeof(uint32_t))
 
 /**
  * Context of the ISAAC CPRNG.
@@ -58,17 +59,30 @@ typedef struct
 } isaac_ctx_t;
 
 /**
- * Initialises the ISAAC CPRNG.
- *
- * Uses the `rsl` field as initial seed if the flag is TRUE. Otherwise ???
+ * Initialises the ISAAC CPRNG with a seed.
  *
  * Maps to `void randinit(randctx *r, word flag)` from the original
  * implementation.
  *
- * @param ctx
- * @param flag
+ * @warning
+ * Failing to provide a seed (NULL or long 0 bytes), will make the whole CSPRNG
+ * insecure as a zero-seed is used instead. This is only useful if a
+ * **non-cryptographic** PRNG is required.
+ *
+ * @warning
+ * Providing a seed with low entropy will result in the whole CSPRNG to be
+ * weak.
+ *
+ * @param ctx the ISAAC state to be initialised.
+ * @param seed pointer to the seed to use, which is copied into the context.
+ * - If NULL, then a zero seed is used instead (**insecure!**)
+ * @param seed_len amount of bytes in the seed, max #ISAAC_SEED_MAX_BYTES.
+ * - If 0, then a zero seed is used instead (**insecure!**)
+ * - If > #ISAAC_SEED_MAX_BYTES, then only #ISAAC_SEED_MAX_BYTES will be used
+ * - If < #ISAAC_SEED_MAX_BYTES, then the provided bytes will be used and the
+ *   rest will be zero-padded.
  */
-void isaac_init(isaac_ctx_t* ctx, bool flag);
+void isaac_init(isaac_ctx_t* ctx, const uint8_t* seed, uint16_t seed_len);
 
 /**
  * Provides the next pseudo-random 32-bit integer.
@@ -85,7 +99,7 @@ void isaac_init(isaac_ctx_t* ctx, bool flag);
  * then isaac_next32() will produce the same byte twice, which is **unsecure**
  * and predictable.
  *
- * @param ctx
+ * @param ctx the ISAAC state, already initialised.
  * @return a pseudo-random 32-bit integer.
  */
 uint32_t isaac_next32(isaac_ctx_t* ctx);
