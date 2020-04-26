@@ -14,21 +14,7 @@
 
 #include "isaac.h"
 
-
-#ifndef min
-# define min(a, b) (((a)<(b)) ? (a) : (b))
-#endif /* min */
-#ifndef max
-# define max(a, b) (((a)<(b)) ? (b) : (a))
-#endif /* max */
-#ifndef align
-# define align(a) (((uint32_t)a+(sizeof(void *)-1))&(~(sizeof(void *)-1)))
-#endif /* align */
-#ifndef abs
-# define abs(a) (((a)>0) ? (a) : -(a))
-#endif
-
-#define ISAAC_IND(mm, x) ((mm)[(x >> 2U) & (ISAAC_SIZE - 1)])
+#define ISAAC_IND(mm, x) ((mm)[(x >> 2U) & (ISAAC_U32_ELEMENTS - 1)])
 
 #define ISAAC_STEP(mix, a, b, mm, m, m2, r, x) \
 { \
@@ -75,7 +61,7 @@ void isaac_init(isaac_ctx_t* const ctx, const bool flag)
     if (flag)
     {
         /* Initialise using the contents of result[] as the seed. */
-        for (i = 0; i < ISAAC_SIZE; i += 8)
+        for (i = 0; i < ISAAC_U32_ELEMENTS; i += 8)
         {
             a += ctx->result[i];
             b += ctx->result[i + 1];
@@ -96,7 +82,7 @@ void isaac_init(isaac_ctx_t* const ctx, const bool flag)
             ctx->mem[i + 7] = h;
         }
         /* Do a second pass to make all of the seed affect all of ctx->mem. */
-        for (i = 0; i < ISAAC_SIZE; i += 8)
+        for (i = 0; i < ISAAC_U32_ELEMENTS; i += 8)
         {
             a += ctx->mem[i];
             b += ctx->mem[i + 1];
@@ -119,7 +105,7 @@ void isaac_init(isaac_ctx_t* const ctx, const bool flag)
     }
     else
     {
-        for (i = 0; i < ISAAC_SIZE; i += 8)
+        for (i = 0; i < ISAAC_U32_ELEMENTS; i += 8)
         {
             /* Fill in ctx->mem[] with messy stuff. */
             ISAAC_MIX(a, b, c, d, e, f, g, h);
@@ -136,7 +122,8 @@ void isaac_init(isaac_ctx_t* const ctx, const bool flag)
     /* Fill in the first set of results. */
     isaac_shuffle(ctx);
     /* Prepare to use the first set of results. */
-    ctx->available_next_values = ISAAC_SIZE;
+    ctx->next32_index = ISAAC_U32_ELEMENTS - 1;
+    ctx->next8_index = 0;
 }
 
 /*
@@ -154,7 +141,7 @@ static void isaac_shuffle(isaac_ctx_t* const ctx)
     uint32_t x;
     uint32_t y;
 
-    for (m = mm, mend = m2 = m + (ISAAC_SIZE / 2U); m < mend;)
+    for (m = mm, mend = m2 = m + (ISAAC_U32_ELEMENTS / 2U); m < mend;)
     {
         ISAAC_STEP(a << 13U, a, b, mm, m, m2, r, x);
         ISAAC_STEP((a & UINT32_MAX) >> 6U, a, b, mm, m, m2, r, x);
@@ -172,12 +159,37 @@ static void isaac_shuffle(isaac_ctx_t* const ctx)
     ctx->a = a;
 }
 
-uint32_t isaac_next(isaac_ctx_t* const ctx)
+uint32_t isaac_next32(isaac_ctx_t* const ctx)
 {
-    if (!(ctx->available_next_values--))
+    const uint32_t next32 = ctx->result[ctx->next32_index];
+    if (ctx->next32_index == 0)
     {
+        /* This is the last value we could extract before the reshuffle. */
         isaac_shuffle(ctx);
-        ctx->available_next_values = ISAAC_SIZE - 1;
+        ctx->next32_index = ISAAC_U32_ELEMENTS - 1;
     }
-    return ctx->result[ctx->available_next_values];
+    else
+    {
+        ctx->next32_index--;
+    }
+    return next32;
+}
+
+/* We read the same next32 value 4 times and extract 4 different bytes from
+ * it, one per next8 call. */
+uint8_t isaac_next8(isaac_ctx_t* const ctx)
+{
+    const uint8_t next8 = (uint8_t) (
+            ctx->result[ctx->next32_index] >> ctx->next8_index * 8U
+    );
+    if (ctx->next8_index >= 3)
+    {
+        ctx->next8_index = 0;
+        isaac_next32(ctx);
+    }
+    else
+    {
+        ctx->next8_index++;
+    }
+    return next8;
 }

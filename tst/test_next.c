@@ -138,18 +138,24 @@ const static uint32_t expected_next_results[EXPECTED_NEXT_ELEMENTS] = {
         0xE448E96DUL, 0xF650E4C8UL,
 };
 
-static void test_next_once(void)
+static void test_next32_a_few(void)
 {
     isaac_ctx_t ctx;
     memset(&ctx, 0, sizeof(ctx)); // Zero seed
     isaac_init(&ctx, true);
+    uint32_t next;
 
-    const uint32_t next = isaac_next(&ctx);
-
+    next = isaac_next32(&ctx);
     atto_eq(next, expected_next_results[0]);
+
+    next = isaac_next32(&ctx);
+    atto_eq(next, expected_next_results[1]);
+
+    next = isaac_next32(&ctx);
+    atto_eq(next, expected_next_results[2]);
 }
 
-static void test_next_all(void)
+static void test_next32_all(void)
 {
     uint32_t result;
     isaac_ctx_t ctx;
@@ -157,14 +163,66 @@ static void test_next_all(void)
     isaac_init(&ctx, true);
     for (uint_fast32_t i = 0; i < EXPECTED_NEXT_ELEMENTS; i++)
     {
-        result = isaac_next(&ctx);
+        result = isaac_next32(&ctx);
         atto_eq(result, expected_next_results[i]);
     }
-    puts("");
+}
+
+static void test_next8_four_times(void)
+{
+    isaac_ctx_t ctx;
+    memset(&ctx, 0, sizeof(ctx)); // Zero seed
+    isaac_init(&ctx, true);
+    uint8_t next;
+
+    next = isaac_next8(&ctx);
+    atto_eq(next, (expected_next_results[0] >> 0U) & 0xFFU);
+    next = isaac_next8(&ctx);
+    atto_eq(next, (expected_next_results[0] >> 8U) & 0xFFU);
+    next = isaac_next8(&ctx);
+    atto_eq(next, (expected_next_results[0] >> 16U) & 0xFFU);
+    next = isaac_next8(&ctx);
+    atto_eq(next, (expected_next_results[0] >> 24U) & 0xFFU);
+
+    next = isaac_next8(&ctx);
+    atto_eq(next, (expected_next_results[1] >> 0U) & 0xFFU);
+    next = isaac_next8(&ctx);
+    atto_eq(next, (expected_next_results[1] >> 8U) & 0xFFU);
+    next = isaac_next8(&ctx);
+    atto_eq(next, (expected_next_results[1] >> 16U) & 0xFFU);
+    next = isaac_next8(&ctx);
+    atto_eq(next, (expected_next_results[1] >> 24U) & 0xFFU);
+
+    next = isaac_next8(&ctx);
+    atto_eq(next, (expected_next_results[2] >> 0U) & 0xFFU);
+    next = isaac_next8(&ctx);
+    atto_eq(next, (expected_next_results[2] >> 8U) & 0xFFU);
+    next = isaac_next8(&ctx);
+    atto_eq(next, (expected_next_results[2] >> 16U) & 0xFFU);
+    next = isaac_next8(&ctx);
+    atto_eq(next, (expected_next_results[2] >> 24U) & 0xFFU);
+}
+
+static void test_next8_all(void)
+{
+    uint8_t result;
+    isaac_ctx_t ctx;
+    memset(&ctx, 0, sizeof(ctx));
+    isaac_init(&ctx, true);
+    for (uint_fast32_t i = 0; i < EXPECTED_NEXT_ELEMENTS; i++)
+    {
+        for (uint_fast8_t byte = 0; byte < 4; byte++)
+        {
+            result = isaac_next8(&ctx);
+            atto_eq(result, (expected_next_results[i] >> byte * 8U) & 0xFFU);
+        }
+    }
 }
 
 void test_isaac_next(void)
 {
-    test_next_once();
-    test_next_all();
+    test_next32_a_few();
+    test_next32_all();
+    test_next8_four_times();
+    test_next8_all();
 }

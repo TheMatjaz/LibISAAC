@@ -39,20 +39,22 @@ extern "C"
 #include <stdint.h>
 #include <stdbool.h>
 
-#define ISAAC_SIZE 256U
+#define ISAAC_U32_ELEMENTS 256U
 
 /**
  * Context of the ISAAC CPRNG.
  *
  * Maps to `randctx` from the original implementation.
  */
-typedef struct {
-    uint32_t available_next_values;
-    uint32_t result[ISAAC_SIZE];
-    uint32_t mem[ISAAC_SIZE];
+typedef struct
+{
+    uint32_t result[ISAAC_U32_ELEMENTS];
+    uint32_t mem[ISAAC_U32_ELEMENTS];
     uint32_t a;
     uint32_t b;
     uint32_t c;
+    uint16_t next32_index;  // cound be uint8
+    uint16_t next8_index; // cound be uint8
 } isaac_ctx_t;
 
 /**
@@ -67,7 +69,30 @@ typedef struct {
  * @param flag
  */
 void isaac_init(isaac_ctx_t* ctx, bool flag);
-uint32_t isaac_next(isaac_ctx_t* ctx);
+
+/**
+ * Provides the next pseudo-random 32-bit integer.
+ *
+ * After #ISAAC_ELEMENTS calls it will automatically reshuffle the ISAAC state
+ * to provide #ISAAC_ELEMENTS new elements. This means that #ISAAC_ELEMENTS
+ * calls are very cheap (just reading the uint32_t value from the state),
+ * and the #ISAAC_ELEMENTS+1 call is expensive.
+ *
+ * @warning
+ * **Use either isaac_next32() or isaac_next8(), never both**, especially not
+ * in an interleaved manner. The issue is that isaac_next8() reads bytes
+ * from the isaac_next32() output; this means that calling isaac_next8() and
+ * then isaac_next32() will produce the same byte twice, which is **unsecure**
+ * and predictable.
+ *
+ * @param ctx
+ * @return a pseudo-random 32-bit integer.
+ */
+uint32_t isaac_next32(isaac_ctx_t* ctx);
+
+// Compared to the next32, this provides the bytes in little endian order
+// DO NOT MIX USAGE OF NEXT8 and NEXT32
+uint8_t isaac_next8(isaac_ctx_t* ctx);
 
 
 #ifdef __cplusplus
