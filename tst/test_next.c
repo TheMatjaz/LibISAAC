@@ -128,12 +128,12 @@ const static uint32_t expected_next_results[EXPECTED_NEXT_ELEMENTS] = {
 /*
  * This is the stream of uint32 values obtained by calling isaac_next()
  * repeatedly after the isaac_ctx_t has been initialised with a
- * seed of {1,2,3,4,5,6,7,8} (in bytes, not uint32_t)
+ * seed of {1, 2, 3, 4, 5, 6, 7, 8} (in bytes, not uint32_t)
  *
  * In particular this is the value printed by next_values_nonzero_seed()
  * in generate.c
  */
-const static uint32_t expected_next32_with_seed_0102030405060708[EXPECTED_NEXT_ELEMENTS] = {
+const static uint32_t expected_next32_with_nonzero_seed[EXPECTED_NEXT_ELEMENTS] = {
         0xC987111FUL, 0x33949FA5UL, 0x72F289B6UL, 0x00861702UL, 0xCB5D7A6EUL,
         0x5291E936UL, 0x79879ADEUL, 0xBB6EF9CFUL, 0x8F8DD09DUL, 0xA44B1A6CUL,
         0xB3C78167UL, 0x9020783BUL, 0xD96F29CAUL, 0x3A6AFE88UL, 0xD5EB7091UL,
@@ -267,7 +267,7 @@ static void test_next32_all(void)
     }
 }
 
-static void test_next8_four_times(void)
+static void test_next8_a_few(void)
 {
     isaac_ctx_t ctx;
     isaac_init(&ctx, NULL, 0);  // Zero seed
@@ -324,13 +324,13 @@ static void test_next32_a_few_with_nonzero_seed(void)
     uint32_t next;
 
     next = isaac_next32(&ctx);
-    atto_eq(next, expected_next32_with_seed_0102030405060708[0]);
+    atto_eq(next, expected_next32_with_nonzero_seed[0]);
 
     next = isaac_next32(&ctx);
-    atto_eq(next, expected_next32_with_seed_0102030405060708[1]);
+    atto_eq(next, expected_next32_with_nonzero_seed[1]);
 
     next = isaac_next32(&ctx);
-    atto_eq(next, expected_next32_with_seed_0102030405060708[2]);
+    atto_eq(next, expected_next32_with_nonzero_seed[2]);
 }
 
 static void test_next32_all_with_nonzero_seed(void)
@@ -342,7 +342,60 @@ static void test_next32_all_with_nonzero_seed(void)
     for (uint_fast32_t i = 0; i < EXPECTED_NEXT_ELEMENTS; i++)
     {
         result = isaac_next32(&ctx);
-        atto_eq(result, expected_next32_with_seed_0102030405060708[i]);
+        atto_eq(result, expected_next32_with_nonzero_seed[i]);
+    }
+}
+
+static void test_next8_a_few_with_nonzero_seed(void)
+{
+    isaac_ctx_t ctx;
+    const uint8_t seed[8] = {1, 2, 3, 4, 5, 6, 7, 8};
+    isaac_init(&ctx, seed, 8);
+    uint8_t next;
+
+    next = isaac_next8(&ctx);
+    atto_eq(next, (expected_next32_with_nonzero_seed[0] >> 0U) & 0xFFU);
+    next = isaac_next8(&ctx);
+    atto_eq(next, (expected_next32_with_nonzero_seed[0] >> 8U) & 0xFFU);
+    next = isaac_next8(&ctx);
+    atto_eq(next, (expected_next32_with_nonzero_seed[0] >> 16U) & 0xFFU);
+    next = isaac_next8(&ctx);
+    atto_eq(next, (expected_next32_with_nonzero_seed[0] >> 24U) & 0xFFU);
+
+    next = isaac_next8(&ctx);
+    atto_eq(next, (expected_next32_with_nonzero_seed[1] >> 0U) & 0xFFU);
+    next = isaac_next8(&ctx);
+    atto_eq(next, (expected_next32_with_nonzero_seed[1] >> 8U) & 0xFFU);
+    next = isaac_next8(&ctx);
+    atto_eq(next, (expected_next32_with_nonzero_seed[1] >> 16U) & 0xFFU);
+    next = isaac_next8(&ctx);
+    atto_eq(next, (expected_next32_with_nonzero_seed[1] >> 24U) & 0xFFU);
+
+    next = isaac_next8(&ctx);
+    atto_eq(next, (expected_next32_with_nonzero_seed[2] >> 0U) & 0xFFU);
+    next = isaac_next8(&ctx);
+    atto_eq(next, (expected_next32_with_nonzero_seed[2] >> 8U) & 0xFFU);
+    next = isaac_next8(&ctx);
+    atto_eq(next, (expected_next32_with_nonzero_seed[2] >> 16U) & 0xFFU);
+    next = isaac_next8(&ctx);
+    atto_eq(next, (expected_next32_with_nonzero_seed[2] >> 24U) & 0xFFU);
+}
+
+static void test_next8_all_with_nonzero_seed(void)
+{
+    uint8_t result;
+    isaac_ctx_t ctx;
+    const uint8_t seed[8] = {1, 2, 3, 4, 5, 6, 7, 8};
+    isaac_init(&ctx, seed, 8);
+    for (uint_fast16_t i = 0; i < EXPECTED_NEXT_ELEMENTS; i++)
+    {
+        for (uint_fast8_t byte = 0; byte < 4; byte++)
+        {
+            result = isaac_next8(&ctx);
+            atto_eq(result,
+                    (expected_next32_with_nonzero_seed[i] >> byte * 8U) &
+                    0xFFU);
+        }
     }
 }
 
@@ -350,8 +403,10 @@ void test_isaac_next(void)
 {
     test_next32_a_few();
     test_next32_all();
-    test_next8_four_times();
+    test_next8_a_few();
     test_next8_all();
     test_next32_a_few_with_nonzero_seed();
     test_next32_all_with_nonzero_seed();
+    test_next8_a_few_with_nonzero_seed();
+    test_next8_all_with_nonzero_seed();
 }
