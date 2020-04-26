@@ -42,13 +42,19 @@ set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} \
 include_directories(inc/)
 set(LIB_FILES src/isaac.c)
 include_directories(tst/ tst/atto/)
-set(TEST_FILES tst/test.c tst/test_init.c tst/test_next.c tst/atto/atto.c)
+set(TEST_FILES
+        tst/test.c
+        tst/test_init.c
+        tst/test_next.c
+        tst/atto/atto.c)
 
 add_library("isaac" STATIC ${LIB_FILES})
 add_executable("testisaac" ${LIB_FILES} ${TEST_FILES})
 
 include_directories(tst/original/)
-add_executable("orig" tst/original/randport.c)
+add_executable("generatevectors"
+        tst/original/generate.c
+        tst/original/randport.c)
 
 # Doxygen documentation builder
 find_package(Doxygen)
