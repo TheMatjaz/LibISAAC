@@ -57,6 +57,24 @@ static void ctx_no_init(void)
     print_ctx(&ctx);
 }
 
+static void ctx_nonzero_seed(void)
+{
+    randctx ctx;
+    const unsigned char seed[8] = {1, 2, 3, 4, 5, 6, 7, 8};
+    unsigned long int i;
+    for (i = 0; i < 8; i++)
+    {
+        ((unsigned char*) ctx.randrsl)[i] = seed[i];
+    }
+    for (i = 2; i < 256; i++)
+    {
+        ctx.randrsl[i] = 0;  // Zero padding
+    }
+    randinit(&ctx, 1); // Init ISAAC with a non-zero seed
+    puts("Context with seed {1,2,3,4,5,6,7,8}:");
+    print_ctx(&ctx);
+}
+
 static void next_values_zero_seed(void)
 {
     randctx ctx;
@@ -81,7 +99,7 @@ static void next_values_nonzero_seed(void)
     randctx ctx;
     unsigned long int i;
     unsigned long int next;
-    const unsigned char seed[8] = {1,2,3,4,5,6,7,8};
+    const unsigned char seed[8] = {1, 2, 3, 4, 5, 6, 7, 8};
     for (i = 0; i < 8; i++)
     {
         ((unsigned char*) ctx.randrsl)[i] = seed[i];
@@ -103,6 +121,7 @@ int main(void)
 {
     ctx_zero_seed();
     ctx_no_init();
+    ctx_nonzero_seed();
     next_values_zero_seed();
     next_values_nonzero_seed();
     return 0;
