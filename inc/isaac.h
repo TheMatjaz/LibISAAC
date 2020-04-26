@@ -76,13 +76,13 @@ typedef struct
  * @param ctx the ISAAC state to be initialised.
  * @param seed pointer to the seed to use, which is copied into the context.
  * - If NULL, then a zero seed is used instead (**insecure!**)
- * @param seed_len amount of bytes in the seed, max #ISAAC_SEED_MAX_BYTES.
+ * @param seed_bytes amount of **bytes** in the seed, max #ISAAC_SEED_MAX_BYTES.
  * - If 0, then a zero seed is used instead (**insecure!**)
  * - If > #ISAAC_SEED_MAX_BYTES, then only #ISAAC_SEED_MAX_BYTES will be used
  * - If < #ISAAC_SEED_MAX_BYTES, then the provided bytes will be used and the
  *   rest will be zero-padded.
  */
-void isaac_init(isaac_ctx_t* ctx, const uint8_t* seed, uint16_t seed_len);
+void isaac_init(isaac_ctx_t* ctx, const void* seed, uint16_t seed_bytes);
 
 /**
  * Provides the next pseudo-random 32-bit integer.

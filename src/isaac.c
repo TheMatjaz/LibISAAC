@@ -42,11 +42,11 @@
  */
 #define GOLDEN_RATIO 0x9e3779b9
 
-static void isaac_shuffle(isaac_ctx_t* const ctx);
+static void isaac_shuffle(isaac_ctx_t* ctx);
 
 void isaac_init(isaac_ctx_t* const ctx,
-                const uint8_t* const seed,
-                const uint16_t seed_len)
+                const void* const seed,
+                const uint16_t seed_bytes)
 {
     uint32_t a, b, c, d, e, f, g, h;
     unsigned int i; /* Fastest integer type */
@@ -62,19 +62,19 @@ void isaac_init(isaac_ctx_t* const ctx,
     if (seed != NULL)
     {
         /* Copy seed into result[] with zero-padding. */
-        if (seed_len >= ISAAC_SEED_MAX_BYTES)
+        if (seed_bytes >= ISAAC_SEED_MAX_BYTES)
         {
             memcpy(ctx->result, seed, ISAAC_SEED_MAX_BYTES);
         }
         else
         {
-            memcpy(ctx->result, seed, seed_len);
-            memset(&ctx->result[seed_len], 0, ISAAC_SEED_MAX_BYTES - seed_len);
+            memcpy(ctx->result, seed, seed_bytes);
+            memset(&ctx->result[seed_bytes], 0, ISAAC_SEED_MAX_BYTES - seed_bytes);
         }
     }
     else
     {
-        memset(&ctx->result[seed_len], 0, ISAAC_SEED_MAX_BYTES);
+        memset(&ctx->result[seed_bytes], 0, ISAAC_SEED_MAX_BYTES);
     }
     /* Initialise using the contents of result[] as the seed. */
     for (i = 0; i < ISAAC_U32_ELEMENTS; i += 8)

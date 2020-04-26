@@ -57,7 +57,7 @@ static void ctx_no_init(void)
     print_ctx(&ctx);
 }
 
-static void next_values(void)
+static void next_values_zero_seed(void)
 {
     randctx ctx;
     unsigned long int i;
@@ -67,7 +67,28 @@ static void next_values(void)
         ctx.randrsl[i] = 0;  // Zero seed
     }
     randinit(&ctx, 1); // Init ISAAC with zero seed
-    puts("Running next() 512 times");
+    puts("Running next() 512 times with zero seed");
+    for (i = 0; i < 512; i++)
+    {
+        next = rand(&ctx);
+        printf("0x%08lXUL, ", next);
+    }
+    puts("");
+}
+
+static void next_values_nonzero_seed(void)
+{
+    randctx ctx;
+    unsigned long int i;
+    unsigned long int next;
+    ctx.randrsl[0] = 0x01020304UL;
+    ctx.randrsl[1] = 0x05060708UL;
+    for (i = 2; i < 256; i++)
+    {
+        ctx.randrsl[i] = 0;  // Zero padding
+    }
+    randinit(&ctx, 1); // Init ISAAC with non-zero seed
+    puts("Running next() 512 times with non-zero seed");
     for (i = 0; i < 512; i++)
     {
         next = rand(&ctx);
@@ -79,6 +100,7 @@ int main(void)
 {
     ctx_zero_seed();
     ctx_no_init();
-    next_values();
+    next_values_zero_seed();
+    next_values_nonzero_seed();
     return 0;
 }
