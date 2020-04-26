@@ -47,8 +47,8 @@ extern "C"
  * Maps to `randctx` from the original implementation.
  */
 typedef struct {
-    uint32_t cnt;
-    uint32_t rsl[ISAAC_SIZE];
+    uint32_t available_next_values;
+    uint32_t result[ISAAC_SIZE];
     uint32_t mem[ISAAC_SIZE];
     uint32_t a;
     uint32_t b;

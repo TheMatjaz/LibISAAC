@@ -28,8 +28,6 @@
 # define abs(a) (((a)>0) ? (a) : -(a))
 #endif
 
-#define ISAAC_LEFTSHIFT 8U
-
 #define ISAAC_IND(mm, x) ((mm)[(x >> 2U) & (ISAAC_SIZE - 1)])
 
 #define ISAAC_STEP(mix, a, b, mm, m, m2, r, x) \
@@ -37,7 +35,7 @@
   x = *m;  \
   a = ((a^(mix)) + *(m2++)); \
   *(m++) = y = (ISAAC_IND(mm, x) + a + b); \
-  *(r++) = b = (ISAAC_IND(mm, y >> ISAAC_LEFTSHIFT) + x) & UINT32_MAX; \
+  *(r++) = b = (ISAAC_IND(mm, y >> 8U) + x) & UINT32_MAX; \
 }
 
 #define ISAAC_MIX(a, b, c, d, e, f, g, h) \
@@ -58,119 +56,104 @@
  */
 #define GOLDEN_RATIO 0x9e3779b9
 
-static void isaac_round(isaac_ctx_t* ctx);
+static void isaac_shuffle(isaac_ctx_t* const ctx);
 
 void isaac_init(isaac_ctx_t* const ctx, const bool flag)
 {
-    uint32_t* m;
-    uint32_t* r;
-    uint32_t a;
-    uint32_t b;
-    uint32_t c;
-    uint32_t d;
-    uint32_t e;
-    uint32_t f;
-    uint32_t g;
-    uint32_t h;
+    uint32_t a, b, c, d, e, f, g, h;
     unsigned int i; /* Fastest integer type */
 
     ctx->a = ctx->b = ctx->c = 0;
-    m = ctx->mem;
-    r = ctx->rsl;
     a = b = c = d = e = f = g = h = GOLDEN_RATIO;
 
-    /* scramble it */
+    /* Scramble it */
     for (i = 0; i < 4; i++)
     {
         ISAAC_MIX(a, b, c, d, e, f, g, h);
     }
-    /* if (flag==TRUE), then use the contents of rsl[] to initialize mm[]. */
+    /* If (flag==TRUE), then use the contents of result[] to initialize mm[]. */
     if (flag)
     {
-        /* initialize using the contents of r[] as the seed */
+        /* Initialise using the contents of result[] as the seed. */
         for (i = 0; i < ISAAC_SIZE; i += 8)
         {
-            a += r[i];
-            b += r[i + 1];
-            c += r[i + 2];
-            d += r[i + 3];
-            e += r[i + 4];
-            f += r[i + 5];
-            g += r[i + 6];
-            h += r[i + 7];
+            a += ctx->result[i];
+            b += ctx->result[i + 1];
+            c += ctx->result[i + 2];
+            d += ctx->result[i + 3];
+            e += ctx->result[i + 4];
+            f += ctx->result[i + 5];
+            g += ctx->result[i + 6];
+            h += ctx->result[i + 7];
             ISAAC_MIX(a, b, c, d, e, f, g, h);
-            m[i] = a;
-            m[i + 1] = b;
-            m[i + 2] = c;
-            m[i + 3] = d;
-            m[i + 4] = e;
-            m[i + 5] = f;
-            m[i + 6] = g;
-            m[i + 7] = h;
+            ctx->mem[i] = a;
+            ctx->mem[i + 1] = b;
+            ctx->mem[i + 2] = c;
+            ctx->mem[i + 3] = d;
+            ctx->mem[i + 4] = e;
+            ctx->mem[i + 5] = f;
+            ctx->mem[i + 6] = g;
+            ctx->mem[i + 7] = h;
         }
-        /* do a second pass to make all of the seed affect all of m */
+        /* Do a second pass to make all of the seed affect all of ctx->mem. */
         for (i = 0; i < ISAAC_SIZE; i += 8)
         {
-            a += m[i];
-            b += m[i + 1];
-            c += m[i + 2];
-            d += m[i + 3];
-            e += m[i + 4];
-            f += m[i + 5];
-            g += m[i + 6];
-            h += m[i + 7];
+            a += ctx->mem[i];
+            b += ctx->mem[i + 1];
+            c += ctx->mem[i + 2];
+            d += ctx->mem[i + 3];
+            e += ctx->mem[i + 4];
+            f += ctx->mem[i + 5];
+            g += ctx->mem[i + 6];
+            h += ctx->mem[i + 7];
             ISAAC_MIX(a, b, c, d, e, f, g, h);
-            m[i] = a;
-            m[i + 1] = b;
-            m[i + 2] = c;
-            m[i + 3] = d;
-            m[i + 4] = e;
-            m[i + 5] = f;
-            m[i + 6] = g;
-            m[i + 7] = h;
+            ctx->mem[i] = a;
+            ctx->mem[i + 1] = b;
+            ctx->mem[i + 2] = c;
+            ctx->mem[i + 3] = d;
+            ctx->mem[i + 4] = e;
+            ctx->mem[i + 5] = f;
+            ctx->mem[i + 6] = g;
+            ctx->mem[i + 7] = h;
         }
     }
     else
     {
         for (i = 0; i < ISAAC_SIZE; i += 8)
         {
-            /* fill in mm[] with messy stuff */
+            /* Fill in ctx->mem[] with messy stuff. */
             ISAAC_MIX(a, b, c, d, e, f, g, h);
-            m[i] = a;
-            m[i + 1] = b;
-            m[i + 2] = c;
-            m[i + 3] = d;
-            m[i + 4] = e;
-            m[i + 5] = f;
-            m[i + 6] = g;
-            m[i + 7] = h;
+            ctx->mem[i] = a;
+            ctx->mem[i + 1] = b;
+            ctx->mem[i + 2] = c;
+            ctx->mem[i + 3] = d;
+            ctx->mem[i + 4] = e;
+            ctx->mem[i + 5] = f;
+            ctx->mem[i + 6] = g;
+            ctx->mem[i + 7] = h;
         }
     }
-    /* fill in the first set of results */
-    isaac_round(ctx);
-    /* prepare to use the first set of results */
-    ctx->cnt = ISAAC_SIZE;
+    /* Fill in the first set of results. */
+    isaac_shuffle(ctx);
+    /* Prepare to use the first set of results. */
+    ctx->available_next_values = ISAAC_SIZE;
 }
 
 /*
  * Maps to `void isaac(randctx*)` from the original implementation.
  */
-static void isaac_round(isaac_ctx_t* const ctx)
+static void isaac_shuffle(isaac_ctx_t* const ctx)
 {
     uint32_t* m;
-    uint32_t* mm;
+    uint32_t* mm = ctx->mem;
     uint32_t* m2;
-    uint32_t* r;
+    uint32_t* r = ctx->result;
     uint32_t* mend;
-    uint32_t a;
-    uint32_t b;
+    uint32_t a = ctx->a;
+    uint32_t b = ctx->b + (++ctx->c);
     uint32_t x;
     uint32_t y;
 
-    mm = ctx->mem;
-    r = ctx->rsl;
-    a = ctx->a;
-    b = ctx->b + (++ctx->c);
     for (m = mm, mend = m2 = m + (ISAAC_SIZE / 2U); m < mend;)
     {
         ISAAC_STEP(a << 13U, a, b, mm, m, m2, r, x);
@@ -191,17 +174,10 @@ static void isaac_round(isaac_ctx_t* const ctx)
 
 uint32_t isaac_next(isaac_ctx_t* const ctx)
 {
-    if (!(ctx->cnt--))
+    if (!(ctx->available_next_values--))
     {
-        isaac_round(ctx);
-        ctx->cnt = ISAAC_SIZE - 1;
+        isaac_shuffle(ctx);
+        ctx->available_next_values = ISAAC_SIZE - 1;
     }
-    return ctx->rsl[ctx->cnt];
+    return ctx->result[ctx->available_next_values];
 }
-
-#ifdef NEVER
-int main()
-{
-
-}
-#endif
