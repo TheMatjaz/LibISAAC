@@ -15,6 +15,9 @@
  * ISAAC and its original source code is created by Bob Jenkins and
  * released into the public domain.
  *
+ * This implementation is based on the `randport.c` implementation, which uses
+ * 32-bit words while being portable onto 64 bit machines.
+ *
  * @copyright Copyright © 2020, Matjaž Guštin <dev@matjaz.it>
  * <https://matjaz.it>. All rights reserved.
  * @license BSD 3-clause license.
@@ -38,7 +41,11 @@ extern "C"
 
 #define ISAAC_SIZE 256U
 
-/* Context of random number generator */
+/**
+ * Context of the ISAAC CPRNG.
+ *
+ * Maps to `randctx` from the original implementation.
+ */
 typedef struct {
     uint32_t cnt;
     uint32_t rsl[ISAAC_SIZE];
@@ -52,6 +59,9 @@ typedef struct {
  * Initialises the ISAAC CPRNG.
  *
  * Uses the `rsl` field as initial seed if the flag is TRUE. Otherwise ???
+ *
+ * Maps to `void randinit(randctx *r, word flag)` from the original
+ * implementation.
  *
  * @param ctx
  * @param flag

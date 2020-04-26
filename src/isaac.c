@@ -152,6 +152,9 @@ void isaac_init(isaac_ctx_t* const ctx, const bool flag)
     ctx->cnt = ISAAC_SIZE;
 }
 
+/*
+ * Maps to `void isaac(randctx*)` from the original implementation.
+ */
 static void isaac_round(isaac_ctx_t* const ctx)
 {
     uint32_t* m;
@@ -188,14 +191,13 @@ static void isaac_round(isaac_ctx_t* const ctx)
 
 uint32_t isaac_next(isaac_ctx_t* const ctx)
 {
-    if (!ctx->cnt--)
+    if (!(ctx->cnt--))
     {
         isaac_round(ctx);
         ctx->cnt = ISAAC_SIZE - 1;
     }
     return ctx->rsl[ctx->cnt];
 }
-
 
 #ifdef NEVER
 int main()
