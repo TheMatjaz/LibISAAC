@@ -19,7 +19,7 @@
  * In particular this is the value printed by next_values_zero_seed()
  * in generate.c
  */
-const static uint32_t expected_next_results[EXPECTED_NEXT_ELEMENTS] = {
+const static uint32_t expected_stream_with_zero_seed[EXPECTED_NEXT_ELEMENTS] = {
         0x182600F3UL, 0x300B4A8DUL, 0x301B6622UL, 0xB08ACD21UL, 0x296FD679UL,
         0x995206E9UL, 0xB3FFA8B5UL, 0x0FC99C24UL, 0x5F071FAFUL, 0x52251DEFUL,
         0x894F41C2UL, 0xCC4C9AFBUL, 0x96C33F74UL, 0x347CB71DUL, 0xC90F8FBDUL,
@@ -133,7 +133,7 @@ const static uint32_t expected_next_results[EXPECTED_NEXT_ELEMENTS] = {
  * In particular this is the value printed by next_values_nonzero_seed()
  * in generate.c
  */
-const static uint32_t expected_next32_with_nonzero_seed[EXPECTED_NEXT_ELEMENTS] = {
+const static uint32_t expected_stream_with_nonzero_seed[EXPECTED_NEXT_ELEMENTS] = {
         0x23956226UL, 0xA9E1CEBFUL, 0x3EA230EBUL, 0x8175D70DUL, 0xD8B699F5UL,
         0xB4F5C36AUL, 0xB23790CFUL, 0xAEEB9340UL, 0x6F7B8DCDUL, 0x3258B530UL,
         0x4A03FAD4UL, 0x01B103BDUL, 0xB7A31E4FUL, 0x342846F3UL, 0x3EAF2975UL,
@@ -239,174 +239,72 @@ const static uint32_t expected_next32_with_nonzero_seed[EXPECTED_NEXT_ELEMENTS] 
         0xDE0FE6D6UL, 0x5521DA1BUL,
 };
 
-static void test_next32_a_few(void)
+static void test_stream_with_zero_seed(void)
 {
     isaac_ctx_t ctx;
     isaac_init(&ctx, NULL, 0);  // Zero seed
-    uint32_t next;
+    uint32_t stream[300] = {0};
 
-    next = isaac_next32(&ctx);
-    atto_eq(next, expected_next_results[0]);
+    isaac_stream32(&ctx, stream, 300);
 
-    next = isaac_next32(&ctx);
-    atto_eq(next, expected_next_results[1]);
-
-    next = isaac_next32(&ctx);
-    atto_eq(next, expected_next_results[2]);
+    atto_neq(stream[0], 0);
+    atto_memeq(stream, expected_stream_with_zero_seed, 300 * sizeof(uint32_t));
+    atto_eq(ctx.next32_index, 256 * 2 - 300 - 1);
 }
 
-static void test_next32_all(void)
+static void test_stream_with_zero_seed_multiple_calls(void)
 {
-    uint32_t result;
     isaac_ctx_t ctx;
     isaac_init(&ctx, NULL, 0);  // Zero seed
-    for (uint_fast32_t i = 0; i < EXPECTED_NEXT_ELEMENTS; i++)
+    uint32_t stream[300] = {0};
+
+    for (uint16_t i = 0; i < 100; i++)
     {
-        result = isaac_next32(&ctx);
-        atto_eq(result, expected_next_results[i]);
+        isaac_stream32(&ctx, &stream[3 * i], 3);
     }
+
+    atto_neq(stream[0], 0);
+    atto_memeq(stream, expected_stream_with_zero_seed, 300 * sizeof(uint32_t));
+    atto_eq(ctx.next32_index, 256 * 2 - 300 - 1);
 }
 
-static void test_next8_a_few(void)
-{
-    isaac_ctx_t ctx;
-    isaac_init(&ctx, NULL, 0);  // Zero seed
-    uint8_t next;
-
-    next = isaac_next8(&ctx);
-    atto_eq(next, (expected_next_results[0] >> 0U) & 0xFFU);
-    next = isaac_next8(&ctx);
-    atto_eq(next, (expected_next_results[0] >> 8U) & 0xFFU);
-    next = isaac_next8(&ctx);
-    atto_eq(next, (expected_next_results[0] >> 16U) & 0xFFU);
-    next = isaac_next8(&ctx);
-    atto_eq(next, (expected_next_results[0] >> 24U) & 0xFFU);
-
-    next = isaac_next8(&ctx);
-    atto_eq(next, (expected_next_results[1] >> 0U) & 0xFFU);
-    next = isaac_next8(&ctx);
-    atto_eq(next, (expected_next_results[1] >> 8U) & 0xFFU);
-    next = isaac_next8(&ctx);
-    atto_eq(next, (expected_next_results[1] >> 16U) & 0xFFU);
-    next = isaac_next8(&ctx);
-    atto_eq(next, (expected_next_results[1] >> 24U) & 0xFFU);
-
-    next = isaac_next8(&ctx);
-    atto_eq(next, (expected_next_results[2] >> 0U) & 0xFFU);
-    next = isaac_next8(&ctx);
-    atto_eq(next, (expected_next_results[2] >> 8U) & 0xFFU);
-    next = isaac_next8(&ctx);
-    atto_eq(next, (expected_next_results[2] >> 16U) & 0xFFU);
-    next = isaac_next8(&ctx);
-    atto_eq(next, (expected_next_results[2] >> 24U) & 0xFFU);
-}
-
-static void test_next8_all(void)
-{
-    uint8_t result;
-    isaac_ctx_t ctx;
-    isaac_init(&ctx, NULL, 0);  // Zero seed
-    for (uint_fast32_t i = 0; i < EXPECTED_NEXT_ELEMENTS; i++)
-    {
-        for (uint_fast8_t byte = 0; byte < 4; byte++)
-        {
-            result = isaac_next8(&ctx);
-            atto_eq(result, (expected_next_results[i] >> byte * 8U) & 0xFFU);
-        }
-    }
-}
-
-static void test_next32_a_few_with_nonzero_seed(void)
+static void test_stream_with_nonzero_seed(void)
 {
     isaac_ctx_t ctx;
     const uint8_t seed[8] = {1, 2, 3, 4, 5, 6, 7, 8};
     isaac_init(&ctx, seed, 8);
-    uint32_t next;
+    uint32_t stream[300] = {0};
 
-    next = isaac_next32(&ctx);
-    atto_eq(next, expected_next32_with_nonzero_seed[0]);
+    isaac_stream32(&ctx, stream, 300);
 
-    next = isaac_next32(&ctx);
-    atto_eq(next, expected_next32_with_nonzero_seed[1]);
-
-    next = isaac_next32(&ctx);
-    atto_eq(next, expected_next32_with_nonzero_seed[2]);
+    atto_neq(stream[0], 0);
+    atto_memeq(stream, expected_stream_with_nonzero_seed,
+               300 * sizeof(uint32_t));
+    atto_eq(ctx.next32_index, 256 * 2 - 300 - 1);
 }
 
-static void test_next32_all_with_nonzero_seed(void)
+static void test_stream_with_nonzero_seed_multiple_calls(void)
 {
-    uint32_t result;
     isaac_ctx_t ctx;
     const uint8_t seed[8] = {1, 2, 3, 4, 5, 6, 7, 8};
     isaac_init(&ctx, seed, 8);
-    for (uint_fast32_t i = 0; i < EXPECTED_NEXT_ELEMENTS; i++)
+    uint32_t stream[300] = {0};
+
+    for (uint16_t i = 0; i < 100; i++)
     {
-        result = isaac_next32(&ctx);
-        atto_eq(result, expected_next32_with_nonzero_seed[i]);
+        isaac_stream32(&ctx, &stream[3 * i], 3);
     }
-}
 
-static void test_next8_a_few_with_nonzero_seed(void)
-{
-    isaac_ctx_t ctx;
-    const uint8_t seed[8] = {1, 2, 3, 4, 5, 6, 7, 8};
-    isaac_init(&ctx, seed, 8);
-    uint8_t next;
-
-    next = isaac_next8(&ctx);
-    atto_eq(next, (expected_next32_with_nonzero_seed[0] >> 0U) & 0xFFU);
-    next = isaac_next8(&ctx);
-    atto_eq(next, (expected_next32_with_nonzero_seed[0] >> 8U) & 0xFFU);
-    next = isaac_next8(&ctx);
-    atto_eq(next, (expected_next32_with_nonzero_seed[0] >> 16U) & 0xFFU);
-    next = isaac_next8(&ctx);
-    atto_eq(next, (expected_next32_with_nonzero_seed[0] >> 24U) & 0xFFU);
-
-    next = isaac_next8(&ctx);
-    atto_eq(next, (expected_next32_with_nonzero_seed[1] >> 0U) & 0xFFU);
-    next = isaac_next8(&ctx);
-    atto_eq(next, (expected_next32_with_nonzero_seed[1] >> 8U) & 0xFFU);
-    next = isaac_next8(&ctx);
-    atto_eq(next, (expected_next32_with_nonzero_seed[1] >> 16U) & 0xFFU);
-    next = isaac_next8(&ctx);
-    atto_eq(next, (expected_next32_with_nonzero_seed[1] >> 24U) & 0xFFU);
-
-    next = isaac_next8(&ctx);
-    atto_eq(next, (expected_next32_with_nonzero_seed[2] >> 0U) & 0xFFU);
-    next = isaac_next8(&ctx);
-    atto_eq(next, (expected_next32_with_nonzero_seed[2] >> 8U) & 0xFFU);
-    next = isaac_next8(&ctx);
-    atto_eq(next, (expected_next32_with_nonzero_seed[2] >> 16U) & 0xFFU);
-    next = isaac_next8(&ctx);
-    atto_eq(next, (expected_next32_with_nonzero_seed[2] >> 24U) & 0xFFU);
-}
-
-static void test_next8_all_with_nonzero_seed(void)
-{
-    uint8_t result;
-    isaac_ctx_t ctx;
-    const uint8_t seed[8] = {1, 2, 3, 4, 5, 6, 7, 8};
-    isaac_init(&ctx, seed, 8);
-    for (uint_fast16_t i = 0; i < EXPECTED_NEXT_ELEMENTS; i++)
-    {
-        for (uint_fast8_t byte = 0; byte < 4; byte++)
-        {
-            result = isaac_next8(&ctx);
-            atto_eq(result,
-                    (expected_next32_with_nonzero_seed[i] >> byte * 8U) &
-                    0xFFU);
-        }
-    }
+    atto_neq(stream[0], 0);
+    atto_memeq(stream, expected_stream_with_nonzero_seed,
+               300 * sizeof(uint32_t));
+    atto_eq(ctx.next32_index, 256 * 2 - 300 - 1);
 }
 
 void test_isaac_next(void)
 {
-    test_next32_a_few();
-    test_next32_all();
-    test_next8_a_few();
-    test_next8_all();
-    test_next32_a_few_with_nonzero_seed();
-    test_next32_all_with_nonzero_seed();
-    test_next8_a_few_with_nonzero_seed();
-    test_next8_all_with_nonzero_seed();
+    test_stream_with_zero_seed();
+    test_stream_with_zero_seed_multiple_calls();
+    test_stream_with_nonzero_seed();
+    test_stream_with_nonzero_seed_multiple_calls();
 }

@@ -45,7 +45,8 @@ include_directories(tst/ tst/atto/)
 set(TEST_FILES
         tst/test.c
         tst/test_init.c
-        tst/test_next.c
+        tst/test_stream.c
+        tst/test_convert.c
         tst/atto/atto.c)
 
 add_library("isaac" STATIC ${LIB_FILES})

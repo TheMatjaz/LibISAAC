@@ -14,5 +14,6 @@ int main(void)
 {
     test_isaac_init();
     test_isaac_next();
+    test_isaac_convert();
     return atto_at_least_one_fail;
 }

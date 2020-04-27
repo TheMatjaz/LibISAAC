@@ -37,7 +37,7 @@ extern "C"
 #define LIBISAAC_VERSION "1.0.0"
 
 #include <stdint.h>
-#include <string.h>
+#include <stddef.h>
 
 #define ISAAC_U32_ELEMENTS 256U
 #define ISAAC_SEED_MAX_BYTES ISAAC_U32_ELEMENTS
@@ -101,47 +101,59 @@ typedef struct
 void isaac_init(isaac_ctx_t* ctx, const uint8_t* seed, uint16_t seed_bytes);
 
 /**
- * Provides the next pseudo-random 32-bit integer.
+ * Provides the next pseudo-random 32-bit integers.
  *
- * After #ISAAC_U32_ELEMENTS calls it will automatically reshuffle the ISAAC
- * state to provide #ISAAC_U32_ELEMENTS new elements. This means that
- * #ISAAC_U32_ELEMENTS calls are very cheap (just reading the uint32_t value
- * from the state), and the #ISAAC_U32_ELEMENTS+1st call is expensive.
+ * Because ISAAC works on 32-bit values, the stream is in 32-bit integers.
+ * To convert them to bytes:
+ * - get some values into a uint32_t buffer with isaac_stream32()
+ * - allocate a uint8_t buffer
+ * - convert the uint32_t buffer to the uint8_t one using the utility functions
+ *   isaac_uint32_to_le() or isaac_uint32_to_be() for little and big endian
+ *   respectively.
  *
- * @warning
- * **Use either isaac_next32() or isaac_next8(), never both**, especially not
- * in an interleaved manner. The issue is that isaac_next8() reads bytes
- * from the isaac_next32() output; this means that calling isaac_next8() and
- * then isaac_next32() will produce the same byte twice, which is **unsecure**
- * and predictable.
+ * Every #ISAAC_U32_ELEMENTS uint32_t provided it will automatically reshuffle
+ * the ISAAC state to cache #ISAAC_U32_ELEMENTS new elements. This means that
+ * the first #ISAAC_U32_ELEMENTS values after seeding are very cheap (just
+ * copying values from the state) and the #ISAAC_U32_ELEMENTS+1st value is
+ * more expensive.
  *
- * @param ctx the ISAAC state, already initialised.
- * @return a pseudo-random 32-bit integer.
+ * @param[in, out] ctx the ISAAC state, already initialised.
+ * @param[out] ints pseudo-random integers.
+ * @param[in] amount quantity of 32-bit integers to generate.
  */
-uint32_t isaac_next32(isaac_ctx_t* ctx);
+void isaac_stream32(isaac_ctx_t* ctx, uint32_t* ints, size_t amount);
 
 /**
- * Provides the next pseudo-random byte.
+ * Utility function, converting an array of 32-bit integers into bytes using
+ * **little endian** byte order.
  *
- * Basically provides the isaac_next32() output byte-by-byte. The order
- * of the bytes is from (uint32_t*)[0] to (uint32_t*)[3].
+ * Useful to convert a stream of 32-bit integers to 8-bit values.
  *
- * After #ISAAC_U8_ELEMENTS calls it will automatically reshuffle the ISAAC
- * state to provide #ISAAC_U8_ELEMENTS new elements. This means that
- * #ISAAC_U8_ELEMENTS calls are very cheap (just reading the uint8_t value
- * from the state), and the #ISAAC_U8_ELEMENTS+1st call is expensive.
- *
- * @warning
- * **Use either isaac_next32() or isaac_next8(), never both**, especially not
- * in an interleaved manner. The issue is that isaac_next8() reads bytes
- * from the isaac_next32() output; this means that calling isaac_next8() and
- * then isaac_next32() will produce the same byte twice, which is **unsecure**
- * and predictable.
- *
- * @param ctx the ISAAC state, already initialised.
- * @return a pseudo-random byte.
+ * @param[out] bytes 8-bit integers. Must be at least \p amount_of_values*4
+ * bytes long.
+ * @param[in] values 32-bit integers, as obtained from isaac_stream32()
+ * @param[in] amount_of_values quantity of 32-bit integers in the \p values
+ * buffer.
  */
-uint8_t isaac_next8(isaac_ctx_t* ctx);
+void isaac_uint32_to_little_endian(uint8_t* bytes,
+                                   const uint32_t* values,
+                                   size_t amount_of_values);
+
+/**
+ * Utility function, converting an array of 32-bit integers into bytes using
+ * **big endian** byte order.
+ *
+ * Useful to convert a stream of 32-bit integers to 8-bit values.
+ *
+ * @param[out] bytes 8-bit integers. Must be at least \p amount_of_values*4
+ * bytes long.
+ * @param[in] values 32-bit integers, as obtained from isaac_stream32()
+ * @param[in] amount_of_values quantity of 32-bit integers in the \p values
+ * buffer
+ */
+void isaac_uint32_to_big_endian(uint8_t* bytes,
+                                const uint32_t* values,
+                                size_t amount_of_values);
 
 
 #ifdef __cplusplus

@@ -23,6 +23,7 @@ extern "C"
 
 void test_isaac_init(void);
 void test_isaac_next(void);
+void test_isaac_convert(void);
 
 #ifdef __cplusplus
 }

@@ -52,6 +52,10 @@ void isaac_init(isaac_ctx_t* const ctx,
                 const uint8_t* const seed,
                 const uint16_t seed_bytes)
 {
+    if (ctx == NULL)
+    {
+        return;
+    }
     uint32_t a, b, c, d, e, f, g, h;
     uint_fast16_t i; /* Fastest index over elements in result[] and mem[]. */
     ctx->a = ctx->b = ctx->c = 0;
@@ -202,7 +206,6 @@ uint32_t isaac_next32(isaac_ctx_t* const ctx)
     return next32;
 }
 
-
 uint8_t isaac_next8(isaac_ctx_t* const ctx)
 {
     /* We read the same next32 value 4 times and extract 4 different bytes from
@@ -220,4 +223,83 @@ uint8_t isaac_next8(isaac_ctx_t* const ctx)
         ctx->next8_index++;
     }
     return next8;
+}
+
+#define isaac_min(a, b) ((a) < (b)) ? (a) : (b)
+
+void isaac_stream32(isaac_ctx_t* const ctx, uint32_t* ints, size_t amount)
+{
+    if (ctx == NULL || ints == NULL)
+    {
+        return;
+    }
+    do
+    {
+        const size_t available = isaac_min(ctx->next32_index + 1, amount);
+        for (uint_fast16_t i = 0; i < available; i++)
+        {
+            *ints++ = ctx->result[ctx->next32_index--];
+        }
+        amount -= available;
+        if (ctx->next32_index >= ISAAC_U32_ELEMENTS)
+        {
+            /* next32_index underflow, thus out of elements. Reshuffling
+             * and preparing new batch of elements. */
+            isaac_shuffle(ctx);
+            ctx->next32_index = ISAAC_U32_ELEMENTS - 1;
+        }
+    }
+    while (amount);
+}
+
+static inline void uint32_to_le(uint8_t* bytes, uint32_t value)
+{
+    *bytes++ = (uint8_t) (value);
+    value >>= 8U;
+    *bytes++ = (uint8_t) (value);
+    value >>= 8U;
+    *bytes++ = (uint8_t) (value);
+    value >>= 8U;
+    *bytes = (uint8_t) (value);
+}
+
+static inline void uint32_to_be(uint8_t* bytes, uint32_t value)
+{
+
+}
+
+void isaac_uint32_to_little_endian(uint8_t* bytes,
+                                   const uint32_t* values,
+                                   size_t amount_of_values)
+{
+    if (bytes == NULL || values == NULL)
+    {
+        return;
+    }
+    {
+        while (amount_of_values--)
+        {
+            *bytes++ = (uint8_t) (*values);
+            *bytes++ = (uint8_t) (*values >> 8U);
+            *bytes++ = (uint8_t) (*values >> 16U);
+            *bytes++ = (uint8_t) (*values++ >> 24U);
+        }
+    }
+}
+
+void isaac_uint32_to_big_endian(uint8_t* bytes,
+                                const uint32_t* values,
+                                size_t amount_of_values)
+{
+    if (bytes == NULL || values == NULL)
+    {
+        return;
+    }
+    while (amount_of_values--)
+    {
+        *bytes++ = (uint8_t) (*values >> 24U);
+        *bytes++ = (uint8_t) (*values >> 16U);
+        *bytes++ = (uint8_t) (*values >> 8U);
+        *bytes++ = (uint8_t) (*values++);
+    }
 }
