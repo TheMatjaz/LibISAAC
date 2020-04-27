@@ -19,21 +19,21 @@
 #define ISAAC_STEP(mix, a, b, mm, m, m2, r, x) \
 { \
   x = *m;  \
-  a = ((a^(mix)) + *(m2++)); \
-  *(m++) = y = (ISAAC_IND(mm, x) + a + b); \
-  *(r++) = b = (ISAAC_IND(mm, y >> 8U) + x) & UINT32_MAX; \
+  a = (a^(mix)) + *(m2++); \
+  *(m++) = y = ISAAC_IND(mm, x) + a + b; \
+  *(r++) = b = ISAAC_IND(mm, y >> 8U) + x; \
 }
 
 #define ISAAC_MIX(a, b, c, d, e, f, g, h) \
 { \
-   a ^= b << 11U;                d += a; b += c; \
-   b ^= (c & UINT32_MAX) >> 2U;  e += b; c += d; \
-   c ^= d << 8U;                 f += c; d += e; \
-   d ^= (e & UINT32_MAX) >> 16U; g += d; e += f; \
-   e ^= f << 10U;                h += e; f += g; \
-   f ^= (g & UINT32_MAX) >> 4U;  a += f; g += h; \
-   g ^= h << 8U;                 b += g; h += a; \
-   h ^= (a & UINT32_MAX) >> 9U;  c += h; a += b; \
+   a ^= b << 11U; d += a; b += c; \
+   b ^= c >> 2U;  e += b; c += d; \
+   c ^= d << 8U;  f += c; d += e; \
+   d ^= e >> 16U; g += d; e += f; \
+   e ^= f << 10U; h += e; f += g; \
+   f ^= g >> 4U;  a += f; g += h; \
+   g ^= h << 8U;  b += g; h += a; \
+   h ^= a >> 9U;  c += h; a += b; \
 }
 
 /* Explanations why it does not look like 1.618033988749894848...:
@@ -175,16 +175,16 @@ static void isaac_shuffle(isaac_ctx_t* const ctx)
     for (m = mm, mend = m2 = m + (ISAAC_U32_ELEMENTS / 2U); m < mend;)
     {
         ISAAC_STEP(a << 13U, a, b, mm, m, m2, r, x);
-        ISAAC_STEP((a & UINT32_MAX) >> 6U, a, b, mm, m, m2, r, x);
+        ISAAC_STEP(a >> 6U, a, b, mm, m, m2, r, x);
         ISAAC_STEP(a << 2U, a, b, mm, m, m2, r, x);
-        ISAAC_STEP((a & UINT32_MAX) >> 16U, a, b, mm, m, m2, r, x);
+        ISAAC_STEP(a >> 16U, a, b, mm, m, m2, r, x);
     }
     for (m2 = mm; m2 < mend;)
     {
         ISAAC_STEP(a << 13U, a, b, mm, m, m2, r, x);
-        ISAAC_STEP((a & UINT32_MAX) >> 6U, a, b, mm, m, m2, r, x);
+        ISAAC_STEP(a >> 6U, a, b, mm, m, m2, r, x);
         ISAAC_STEP(a << 2U, a, b, mm, m, m2, r, x);
-        ISAAC_STEP((a & UINT32_MAX) >> 16U, a, b, mm, m, m2, r, x);
+        ISAAC_STEP(a >> 16U, a, b, mm, m, m2, r, x);
     }
     ctx->b = b;
     ctx->a = a;
