@@ -1,8 +1,8 @@
 /**
  * @file
  *
- * ISAAC, the fast cryptographic pseudo random number generator (CPRNG) wrapped
- * into a C11, modern, documented API and package. Quoting from its
+ * ISAAC, the fast cryptographic pseudo random number generator (CPRNG), wrapped
+ * into a modern, C11, documented API and package. Quoting from its
  * [web page](https://www.burtleburtle.net/bob/rand/isaacafa.html):
  *
  * > ISAAC (Indirection, Shift, Accumulate, Add, and Count) generates 32-bit
@@ -32,7 +32,7 @@ extern "C"
 #endif
 
 /**
- * Version of the isaac.h API using semantic versioning.
+ * Version of the LibISAAC API using semantic versioning.
  */
 #define LIBISAAC_VERSION "1.0.0"
 
@@ -40,8 +40,7 @@ extern "C"
 #include <string.h>
 
 #define ISAAC_U32_ELEMENTS 256U
-#define ISAAC_U8_ELEMENTS (ISAAC_U32_ELEMENTS * sizeof(uint32_t))
-#define ISAAC_SEED_MAX_BYTES ISAAC_U8_ELEMENTS
+#define ISAAC_SEED_MAX_BYTES ISAAC_U32_ELEMENTS
 
 /**
  * Context of the ISAAC CPRNG.
@@ -62,8 +61,24 @@ typedef struct
 /**
  * Initialises the ISAAC CPRNG with a seed.
  *
+ * The seed is copied value-wise into the ISAAC state, not byte-wise. That
+ * means that a uint8_t array {1,2,3,4} is copied into the ctx->result[]
+ * uint32_t array as {1,2,3,4,0,...,0}, where each value is a uint32_t value.
+ * Looking at the bytes and assuming little Endian byte order, the result is
+ * {1,2,3,4} --> {1,0,0,0,2,0,0,0,3,0,0,0,4,0,0,0,0,...,0}.
+ *
+ * The reason behind this choice is to avoid issues with endianness; as ISAAC
+ * works on uint32_t values rather than their bytes, setting the uint32_t values
+ * and not their bytes, shall produce the same CPRNG stream on architectures
+ * with different endianness. A uint32_t* could also be a valid choice as seed
+ * input, but seeds are usually cryptographic keys and those are byte arrays,
+ * so a developer could be confused on how to insert a uint8_t* seed into
+ * a uint32_t*.
+ *
  * Maps to `void randinit(randctx *r, word flag)` from the original
- * implementation.
+ * implementation. Equivalent to a true `flag` with a seed provided. The
+ * false `flag` is not available, as it should not be used for security
+ * purposes.
  *
  * @warning
  * Failing to provide a seed (NULL or long 0 bytes), will make the whole CSPRNG
@@ -83,7 +98,7 @@ typedef struct
  * - If < #ISAAC_SEED_MAX_BYTES, then the provided bytes will be used and the
  *   rest will be zero-padded.
  */
-void isaac_init(isaac_ctx_t* ctx, const void* seed, uint16_t seed_bytes);
+void isaac_init(isaac_ctx_t* ctx, const uint8_t* seed, uint16_t seed_bytes);
 
 /**
  * Provides the next pseudo-random 32-bit integer.

@@ -44,31 +44,24 @@
 
 static void isaac_shuffle(isaac_ctx_t* ctx);
 
+static void set_seed(isaac_ctx_t* ctx,
+                     const uint8_t* seed,
+                     uint16_t seed_bytes);
+
 void isaac_init(isaac_ctx_t* const ctx,
-                const void* const seed,
-                uint16_t seed_bytes)
+                const uint8_t* const seed,
+                const uint16_t seed_bytes)
 {
     uint32_t a, b, c, d, e, f, g, h;
-    unsigned int i; /* Fastest integer type */
-
+    uint_fast16_t i; /* Fastest index over elements in result[] and mem[]. */
     ctx->a = ctx->b = ctx->c = 0;
     a = b = c = d = e = f = g = h = GOLDEN_RATIO;
-
     /* Scramble it */
     for (i = 0; i < 4; i++)
     {
         ISAAC_MIX(a, b, c, d, e, f, g, h);
     }
-    memset(ctx->result, 0, ISAAC_SEED_MAX_BYTES);
-    if (seed != NULL && seed_bytes > 0)
-    {
-        /* Copy seed into result[]. */
-        if (seed_bytes > ISAAC_SEED_MAX_BYTES)
-        {
-            seed_bytes = ISAAC_SEED_MAX_BYTES;
-        }
-        memcpy(ctx->result, seed, seed_bytes);
-    }
+    set_seed(ctx, seed, seed_bytes);
     /* Initialise using the contents of result[] as the seed. */
     for (i = 0; i < ISAAC_U32_ELEMENTS; i += 8)
     {
@@ -113,13 +106,55 @@ void isaac_init(isaac_ctx_t* const ctx,
     }
     /* Fill in the first set of results. */
     isaac_shuffle(ctx);
-    /* Prepare to use the first set of results. */
+    /* Prepare to use the first set of results with next32() and next8(). */
     ctx->next32_index = ISAAC_U32_ELEMENTS - 1;
     ctx->next8_index = 0;
 }
 
-/*
+/**
+ * @internal
+ * Copies the seed into ctx->result[], padding it with zeros.
+ *
+ * @param ctx the ISAAC state
+ * @param seed bytes of the seed. If NULL, a zero-seed is used.
+ * @param seed_bytes amount of bytes in the seed.
+ */
+static void set_seed(isaac_ctx_t* const ctx,
+                     const uint8_t* const seed,
+                     uint16_t seed_bytes)
+{
+    uint_fast16_t i;
+    if (seed != NULL)
+    {
+        if (seed_bytes > ISAAC_SEED_MAX_BYTES)
+        {
+            seed_bytes = ISAAC_SEED_MAX_BYTES;
+        }
+        for (i = 0; i < seed_bytes; i++)
+        {
+            /* The copy is performed VALUE-wise, not byte wise.
+             * By doing so we have same result[] on architectures with different
+             * endianness. */
+            ctx->result[i] = seed[i];
+        }
+    }
+    else
+    {
+        seed_bytes = 0;
+    }
+    for (i = seed_bytes; i < ISAAC_SEED_MAX_BYTES; i++)
+    {
+        ctx->result[i] = 0;
+    }
+}
+
+/**
+ * @internal
+ * Permutes the ISAAC state.
+ *
  * Maps to `void isaac(randctx*)` from the original implementation.
+ *
+ * @param ctx the ISAAC state
  */
 static void isaac_shuffle(isaac_ctx_t* const ctx)
 {
@@ -167,10 +202,11 @@ uint32_t isaac_next32(isaac_ctx_t* const ctx)
     return next32;
 }
 
-/* We read the same next32 value 4 times and extract 4 different bytes from
- * it, one per next8 call. */
+
 uint8_t isaac_next8(isaac_ctx_t* const ctx)
 {
+    /* We read the same next32 value 4 times and extract 4 different bytes from
+     * it, one per next8 call. */
     const uint8_t next8 = (uint8_t) (
             ctx->result[ctx->next32_index] >> ctx->next8_index * 8U
     );

@@ -64,9 +64,9 @@ static void ctx_nonzero_seed(void)
     unsigned long int i;
     for (i = 0; i < 8; i++)
     {
-        ((unsigned char*) ctx.randrsl)[i] = seed[i];
+        ctx.randrsl[i] = seed[i];  // Value-wise copy, not byte-wise
     }
-    for (i = 2; i < 256; i++)
+    for (i = 8; i < 256; i++)
     {
         ctx.randrsl[i] = 0;  // Zero padding
     }
@@ -84,7 +84,7 @@ static void next_values_zero_seed(void)
     {
         ctx.randrsl[i] = 0;  // Zero seed
     }
-    randinit(&ctx, 1); // Init ISAAC with zero seed
+    randinit(&ctx, 1);  // Init ISAAC with zero seed
     puts("Running next() 512 times with zero seed");
     for (i = 0; i < 512; i++)
     {
@@ -102,13 +102,13 @@ static void next_values_nonzero_seed(void)
     const unsigned char seed[8] = {1, 2, 3, 4, 5, 6, 7, 8};
     for (i = 0; i < 8; i++)
     {
-        ((unsigned char*) ctx.randrsl)[i] = seed[i];
+        ctx.randrsl[i] = seed[i];  // Value-wise copy, not byte-wise
     }
-    for (i = 2; i < 256; i++)
+    for (i = 8; i < 256; i++)
     {
         ctx.randrsl[i] = 0;  // Zero padding
     }
-    randinit(&ctx, 1); // Init ISAAC with non-zero seed
+    randinit(&ctx, 1);  // Init ISAAC with non-zero seed
     puts("Running next() 512 times with non-zero seed");
     for (i = 0; i < 512; i++)
     {
