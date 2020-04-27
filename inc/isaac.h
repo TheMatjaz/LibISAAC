@@ -15,8 +15,8 @@
  * ISAAC and its original source code is created by Bob Jenkins and
  * released into the public domain.
  *
- * This implementation is based on the original `rand.c` implementation, which
- * uses 32-bit words.
+ * This implementation is based on the original `rand.c` and
+ * `isaac64.c`, which uses 32-bit and 64-bit words respectively.
  *
  * @copyright Copyright © 2020, Matjaž Guštin <dev@matjaz.it>
  * <https://matjaz.it>. All rights reserved.
@@ -39,6 +39,17 @@ extern "C"
 #include <stdint.h>
 #include <stddef.h>
 
+#ifndef ISAAC_BITS
+    #define ISAAC_BITS 64
+#endif
+#if (ISAAC_BITS == 32)
+typedef uint32_t isaac_uint_t;
+#elif (ISAAC_BITS == 64)
+typedef uint64_t isaac_uint_t;
+#else
+_Static_assert(0, "Only 32 or 64 bit words are supported.");
+#endif
+
 #define ISAAC_ELEMENTS 256U
 #define ISAAC_SEED_MAX_BYTES ISAAC_ELEMENTS
 
@@ -49,18 +60,18 @@ extern "C"
  */
 typedef struct
 {
-    uint32_t result[ISAAC_ELEMENTS];
-    uint32_t mem[ISAAC_ELEMENTS];
-    uint32_t a;
-    uint32_t b;
-    uint32_t c;
+    isaac_uint_t result[ISAAC_ELEMENTS];
+    isaac_uint_t mem[ISAAC_ELEMENTS];
+    isaac_uint_t a;
+    isaac_uint_t b;
+    isaac_uint_t c;
     /**
-     * Index of the next 32-bit value to output in the stream.
+     * Index of the next value to output in the stream.
      *
-     * Note: this value could be a uint16_t instead of a uint32_t, but by using
-     * a uint32_t we avoid any padding at the end of the struct.
+     * Note: this value could be a uint16_t instead of a isaac_uint_t, but by using
+     * a isaac_uint_t we avoid any padding at the end of the struct.
      */
-    uint32_t next_index;
+    isaac_uint_t next_index;
 } isaac_ctx_t;
 
 /**
@@ -68,17 +79,17 @@ typedef struct
  *
  * The seed is copied value-wise into the ISAAC state, not byte-wise. That
  * means that a uint8_t array {1,2,3,4} is copied into the ctx->result[]
- * uint32_t array as {1,2,3,4,0,...,0}, where each value is a uint32_t value.
+ * isaac_uint_t array as {1,2,3,4,0,...,0}, where each value is a isaac_uint_t value.
  * Looking at the bytes and assuming little Endian byte order, the result is
  * {1,2,3,4} --> {1,0,0,0,2,0,0,0,3,0,0,0,4,0,0,0,0,...,0}.
  *
  * The reason behind this choice is to avoid issues with endianness; as ISAAC
- * works on uint32_t values rather than their bytes, setting the uint32_t values
+ * works on isaac_uint_t values rather than their bytes, setting the isaac_uint_t values
  * and not their bytes, shall produce the same CPRNG stream on architectures
- * with different endianness. A uint32_t* could also be a valid choice as seed
+ * with different endianness. A isaac_uint_t* could also be a valid choice as seed
  * input, but seeds are usually cryptographic keys and those are byte arrays,
  * so a developer could be confused on how to insert a uint8_t* seed into
- * a uint32_t*.
+ * a isaac_uint_t*.
  *
  * Maps to `void randinit(randctx *r, word flag)` from the original
  * implementation. Equivalent to a true `flag` with a seed provided. The
@@ -106,58 +117,59 @@ typedef struct
 void isaac_init(isaac_ctx_t* ctx, const uint8_t* seed, uint16_t seed_bytes);
 
 /**
- * Provides the next pseudo-random 32-bit integers.
+ * Provides the next pseudo-random integer.
  *
- * Because ISAAC works on 32-bit values, the stream is in 32-bit integers.
+ * Because ISAAC works on 32 or 64 bit values, the stream is in integers
+ * instead of bytes.
  * To convert them to bytes:
- * - get some values into a uint32_t buffer with isaac_stream32()
+ * - get some values into a isaac_uint_t buffer with isaac_stream()
  * - allocate a uint8_t buffer
- * - convert the uint32_t buffer to the uint8_t one using the utility functions
- *   isaac_uint32_to_le() or isaac_uint32_to_be() for little and big endian
- *   respectively.
+ * - convert the isaac_uint_t buffer to the uint8_t one using the utility functions
+ *   isaac_to_little_endian() or isaac_to_big_endian() for little and big
+ *   endian respectively.
  *
- * Every #ISAAC_U32_ELEMENTS uint32_t provided it will automatically reshuffle
- * the ISAAC state to cache #ISAAC_U32_ELEMENTS new elements. This means that
- * the first #ISAAC_U32_ELEMENTS values after seeding are very cheap (just
- * copying values from the state) and the #ISAAC_U32_ELEMENTS+1st value is
+ * Every #ISAAC_ELEMENTS values provided it will automatically reshuffle
+ * the ISAAC state to cache #ISAAC_ELEMENTS new elements. This means that
+ * the first #ISAAC_ELEMENTS values after seeding are very cheap (just
+ * copying values from the state) and the #ISAAC_ELEMENTS+1st value is
  * more expensive.
  *
  * @param[in, out] ctx the ISAAC state, already initialised.
  * @param[out] ints pseudo-random integers.
- * @param[in] amount quantity of 32-bit integers to generate.
+ * @param[in] amount quantity of 32-bit/64-bit integers to generate.
  */
-void isaac_stream(isaac_ctx_t* const ctx, uint32_t* ints, size_t amount);
+void isaac_stream(isaac_ctx_t* const ctx, isaac_uint_t* ints, size_t amount);
 
 /**
- * Utility function, converting an array of 32-bit integers into bytes using
- * **little endian** byte order.
+ * Utility function, converting an array of 32-bit/64-bit integers into bytes
+ * using **little endian** byte order.
  *
- * Useful to convert a stream of 32-bit integers to 8-bit values.
+ * Useful to convert a stream of 32-bit/64-bit integers to 8-bit values.
  *
  * @param[out] bytes 8-bit integers. Must be at least \p amount_of_values*4
  * bytes long.
- * @param[in] values 32-bit integers, as obtained from isaac_stream32()
- * @param[in] amount_of_values quantity of 32-bit integers in the \p values
- * buffer.
+ * @param[in] values 32-bit/64-bit integers, as obtained from isaac_stream()
+ * @param[in] amount_of_values quantity of 32-bit/64-bit integers in the
+ * \p values buffer.
  */
 void isaac_to_little_endian(uint8_t* bytes,
-                            const uint32_t* values,
+                            const isaac_uint_t* values,
                             size_t amount_of_values);
 
 /**
- * Utility function, converting an array of 32-bit integers into bytes using
- * **big endian** byte order.
+ * Utility function, converting an array of 32-bit/64-bit integers into bytes
+ * using **big endian** byte order.
  *
- * Useful to convert a stream of 32-bit integers to 8-bit values.
+ * Useful to convert a stream of 32-bit/64-bit integers to 8-bit values.
  *
  * @param[out] bytes 8-bit integers. Must be at least \p amount_of_values*4
  * bytes long.
- * @param[in] values 32-bit integers, as obtained from isaac_stream32()
- * @param[in] amount_of_values quantity of 32-bit integers in the \p values
- * buffer
+ * @param[in] values 32-bit/64-bit integers, as obtained from isaac_stream()
+ * @param[in] amount_of_values quantity of 32-bit/64-bit integers in the
+ * \p values buffer.
  */
 void isaac_to_big_endian(uint8_t* bytes,
-                         const uint32_t* values,
+                         const isaac_uint_t* values,
                          size_t amount_of_values);
 
 

@@ -40,8 +40,7 @@ set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} \
         -funroll-loops")
 
 include_directories(inc/)
-set(LIB32_FILES src/isaac.c)
-set(LIB64_FILES src/isaac64.c)
+set(LIB_FILES src/isaac64.c)
 include_directories(tst/ tst/atto/)
 set(TEST_FILES
         tst/test.c
@@ -50,10 +49,14 @@ set(TEST_FILES
         tst/test_convert.c
         tst/atto/atto.c)
 
-add_library("isaac32" STATIC ${LIB32_FILES})
-add_library("isaac64" STATIC ${LIB64_FILES})
-add_executable("testisaac32" ${LIB32_FILES} ${TEST_FILES})
-add_executable("testisaac64" ${LIB64_FILES} ${TEST_FILES})
+add_library(isaac32 STATIC ${LIB_FILES})
+target_compile_definitions(isaac32 PUBLIC ISAAC_BITS=32)
+add_library(isaac64 STATIC ${LIB_FILES})
+target_compile_definitions(isaac64 PUBLIC ISAAC_BITS=64)
+add_executable(testisaac32 ${LIB_FILES} ${TEST_FILES})
+target_compile_definitions(testisaac32 PUBLIC ISAAC_BITS=32)
+add_executable(testisaac64 ${LIB_FILES} ${TEST_FILES})
+target_compile_definitions(testisaac64 PUBLIC ISAAC_BITS=64)
 
 include_directories(tst/original/)
 add_executable("generatevectors"
