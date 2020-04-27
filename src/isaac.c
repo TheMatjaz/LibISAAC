@@ -190,41 +190,6 @@ static void isaac_shuffle(isaac_ctx_t* const ctx)
     ctx->a = a;
 }
 
-uint32_t isaac_next32(isaac_ctx_t* const ctx)
-{
-    const uint32_t next32 = ctx->result[ctx->next32_index];
-    if (ctx->next32_index == 0)
-    {
-        /* This is the last value we could extract before the reshuffle. */
-        isaac_shuffle(ctx);
-        ctx->next32_index = ISAAC_U32_ELEMENTS - 1;
-    }
-    else
-    {
-        ctx->next32_index--;
-    }
-    return next32;
-}
-
-uint8_t isaac_next8(isaac_ctx_t* const ctx)
-{
-    /* We read the same next32 value 4 times and extract 4 different bytes from
-     * it, one per next8 call. */
-    const uint8_t next8 = (uint8_t) (
-            ctx->result[ctx->next32_index] >> ctx->next8_index * 8U
-    );
-    if (ctx->next8_index >= 3)
-    {
-        ctx->next8_index = 0;
-        isaac_next32(ctx);
-    }
-    else
-    {
-        ctx->next8_index++;
-    }
-    return next8;
-}
-
 #define isaac_min(a, b) ((a) < (b)) ? (a) : (b)
 
 void isaac_stream32(isaac_ctx_t* const ctx, uint32_t* ints, size_t amount)
@@ -250,22 +215,6 @@ void isaac_stream32(isaac_ctx_t* const ctx, uint32_t* ints, size_t amount)
         }
     }
     while (amount);
-}
-
-static inline void uint32_to_le(uint8_t* bytes, uint32_t value)
-{
-    *bytes++ = (uint8_t) (value);
-    value >>= 8U;
-    *bytes++ = (uint8_t) (value);
-    value >>= 8U;
-    *bytes++ = (uint8_t) (value);
-    value >>= 8U;
-    *bytes = (uint8_t) (value);
-}
-
-static inline void uint32_to_be(uint8_t* bytes, uint32_t value)
-{
-
 }
 
 void isaac_uint32_to_little_endian(uint8_t* bytes,
