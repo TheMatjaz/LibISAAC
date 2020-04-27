@@ -15,8 +15,8 @@
  * ISAAC and its original source code is created by Bob Jenkins and
  * released into the public domain.
  *
- * This implementation is based on the `randport.c` implementation, which uses
- * 32-bit words while being portable onto 64 bit machines.
+ * This implementation is based on the original `rand.c` implementation, which
+ * uses 32-bit words.
  *
  * @copyright Copyright © 2020, Matjaž Guštin <dev@matjaz.it>
  * <https://matjaz.it>. All rights reserved.
@@ -39,8 +39,8 @@ extern "C"
 #include <stdint.h>
 #include <stddef.h>
 
-#define ISAAC_U32_ELEMENTS 256U
-#define ISAAC_SEED_MAX_BYTES ISAAC_U32_ELEMENTS
+#define ISAAC_ELEMENTS 256U
+#define ISAAC_SEED_MAX_BYTES ISAAC_ELEMENTS
 
 /**
  * Context of the ISAAC CPRNG.
@@ -49,13 +49,18 @@ extern "C"
  */
 typedef struct
 {
-    uint32_t result[ISAAC_U32_ELEMENTS];
-    uint32_t mem[ISAAC_U32_ELEMENTS];
+    uint32_t result[ISAAC_ELEMENTS];
+    uint32_t mem[ISAAC_ELEMENTS];
     uint32_t a;
     uint32_t b;
     uint32_t c;
-    uint16_t next32_index;
-    uint16_t next8_index;
+    /**
+     * Index of the next 32-bit value to output in the stream.
+     *
+     * Note: this value could be a uint16_t instead of a uint32_t, but by using
+     * a uint32_t we avoid any padding at the end of the struct.
+     */
+    uint32_t next_index;
 } isaac_ctx_t;
 
 /**
@@ -121,7 +126,7 @@ void isaac_init(isaac_ctx_t* ctx, const uint8_t* seed, uint16_t seed_bytes);
  * @param[out] ints pseudo-random integers.
  * @param[in] amount quantity of 32-bit integers to generate.
  */
-void isaac_stream32(isaac_ctx_t* ctx, uint32_t* ints, size_t amount);
+void isaac_stream(isaac_ctx_t* const ctx, uint32_t* ints, size_t amount);
 
 /**
  * Utility function, converting an array of 32-bit integers into bytes using
@@ -135,9 +140,9 @@ void isaac_stream32(isaac_ctx_t* ctx, uint32_t* ints, size_t amount);
  * @param[in] amount_of_values quantity of 32-bit integers in the \p values
  * buffer.
  */
-void isaac_uint32_to_little_endian(uint8_t* bytes,
-                                   const uint32_t* values,
-                                   size_t amount_of_values);
+void isaac_to_little_endian(uint8_t* bytes,
+                            const uint32_t* values,
+                            size_t amount_of_values);
 
 /**
  * Utility function, converting an array of 32-bit integers into bytes using
@@ -151,9 +156,9 @@ void isaac_uint32_to_little_endian(uint8_t* bytes,
  * @param[in] amount_of_values quantity of 32-bit integers in the \p values
  * buffer
  */
-void isaac_uint32_to_big_endian(uint8_t* bytes,
-                                const uint32_t* values,
-                                size_t amount_of_values);
+void isaac_to_big_endian(uint8_t* bytes,
+                         const uint32_t* values,
+                         size_t amount_of_values);
 
 
 #ifdef __cplusplus

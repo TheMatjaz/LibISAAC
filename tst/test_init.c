@@ -11,8 +11,7 @@
 #include "test.h"
 
 const static isaac_ctx_t zero_initialised_ctx = {
-        .next32_index = ISAAC_U32_ELEMENTS - 1,
-        .next8_index = 0,
+        .next_index = ISAAC_ELEMENTS - 1,
         .a = 0x44D22B48UL,
         .b = 0x182600F3UL,
         .c = 0x00000001UL,
@@ -151,8 +150,7 @@ const static isaac_ctx_t zero_initialised_ctx = {
 };
 
 const static isaac_ctx_t nonzero_initialised_ctx = {
-        .next32_index = ISAAC_U32_ELEMENTS - 1,
-        .next8_index = 0,
+        .next_index = ISAAC_ELEMENTS - 1,
         .a = 0xD131EDD6UL,
         .b = 0x23956226UL,
         .c = 0x00000001UL,

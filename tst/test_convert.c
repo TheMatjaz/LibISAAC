@@ -15,7 +15,7 @@ static void test_to_little_endian(void)
     const uint32_t values[2] = {0x01020304UL, 0xAABBCCDDUL};
     uint8_t bytes[8] = {0};
 
-    isaac_uint32_to_little_endian(bytes, values, 2);
+    isaac_to_little_endian(bytes, values, 2);
 
     atto_eq(4, sizeof(uint32_t));
     atto_eq(bytes[0], 0x04);
@@ -33,7 +33,7 @@ static void test_to_big_endian(void)
     const uint32_t values[2] = {0x01020304UL, 0xAABBCCDDUL};
     uint8_t bytes[2 * sizeof(uint32_t)] = {0};
 
-    isaac_uint32_to_big_endian(bytes, values, 2);
+    isaac_to_big_endian(bytes, values, 2);
 
     atto_eq(bytes[0], 0x01);
     atto_eq(bytes[1], 0x02);
