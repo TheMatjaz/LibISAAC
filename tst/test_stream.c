@@ -610,7 +610,7 @@ static void test_stream_with_zero_seed(void)
     atto_eq(stream[0], expected_stream_with_zero_seed[0]);
     atto_memeq(stream, expected_stream_with_zero_seed,
                300 * sizeof(isaac_uint_t));
-    atto_eq(ctx.next_index, 300 - 256);
+    atto_eq(ctx.stream_index, 300 - 256);
 }
 
 static void test_stream_with_zero_seed_multiple_calls(void)
@@ -627,7 +627,7 @@ static void test_stream_with_zero_seed_multiple_calls(void)
     atto_neq(stream[0], 0);
     atto_memeq(stream, expected_stream_with_zero_seed,
                300 * sizeof(isaac_uint_t));
-    atto_eq(ctx.next_index, 300 - 256);
+    atto_eq(ctx.stream_index, 300 - 256);
 }
 
 static void test_stream_with_nonzero_seed(void)
@@ -642,7 +642,7 @@ static void test_stream_with_nonzero_seed(void)
     atto_neq(stream[0], 0);
     atto_memeq(stream, expected_stream_with_nonzero_seed,
                300 * sizeof(isaac_uint_t));
-    atto_eq(ctx.next_index, 300 - 256);
+    atto_eq(ctx.stream_index, 300 - 256);
 }
 
 static void test_stream_with_nonzero_seed_multiple_calls(void)
@@ -660,7 +660,7 @@ static void test_stream_with_nonzero_seed_multiple_calls(void)
     atto_neq(stream[0], 0);
     atto_memeq(stream, expected_stream_with_nonzero_seed,
                300 * sizeof(isaac_uint_t));
-    atto_eq(ctx.next_index, 300 - 256);
+    atto_eq(ctx.stream_index, 300 - 256);
 }
 
 void test_isaac_next(void)

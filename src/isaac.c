@@ -90,7 +90,7 @@ void isaac_init(isaac_ctx_t* const ctx,
     }
     isaac_uint_t a, b, c, d, e, f, g, h;
     uint_fast16_t i; /* Fastest index over elements in result[] and mem[]. */
-    ctx->next_index = ctx->a = ctx->b = ctx->c = 0;
+    ctx->stream_index = ctx->a = ctx->b = ctx->c = 0;
     a = b = c = d = e = f = g = h = GOLDEN_RATIO;
     /* Scramble it */
     for (i = 0; i < 4; i++)
@@ -248,17 +248,17 @@ void isaac_stream(isaac_ctx_t* const ctx, isaac_uint_t* ints, size_t amount)
     uint_fast16_t available;
     while (amount)
     {
-        available = ISAAC_MIN(ISAAC_ELEMENTS - ctx->next_index, amount);
+        available = ISAAC_MIN(ISAAC_ELEMENTS - ctx->stream_index, amount);
         amount -= available;
         while (available--)
         {
-            *ints++ = ctx->result[ctx->next_index++];
+            *ints++ = ctx->result[ctx->stream_index++];
         };
-        if (ctx->next_index >= ISAAC_ELEMENTS)
+        if (ctx->stream_index >= ISAAC_ELEMENTS)
         {
             /* Out of elements. Reshuffling and preparing new batch. */
             isaac_shuffle(ctx);
-            ctx->next_index = 0;
+            ctx->stream_index = 0;
         }
     }
 }

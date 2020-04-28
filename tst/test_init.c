@@ -13,7 +13,7 @@
 #if ISAAC_BITS > 32
 
 const static isaac_ctx_t zero_initialised_ctx = {
-        .next_index = 0,
+        .stream_index = 0,
         .a = 0xCE150DF74800329AULL,
         .b = 0x9D39247E33776D41ULL,
         .c = 0x0000000000000001ULL,
@@ -280,7 +280,7 @@ const static isaac_ctx_t zero_initialised_ctx = {
 };
 
 const static isaac_ctx_t nonzero_initialised_ctx = {
-        .next_index = 0,
+        .stream_index = 0,
         .a = 0x206E5B8744408867ULL,
         .b = 0x0F5268BA58C45B3DULL,
         .c = 0x0000000000000001ULL,
@@ -549,7 +549,7 @@ const static isaac_ctx_t nonzero_initialised_ctx = {
 #else
 
 const static isaac_ctx_t zero_initialised_ctx = {
-        .next_index = 0,
+        .stream_index = 0,
         .a = 0x44D22B48UL,
         .b = 0x182600F3UL,
         .c = 0x00000001UL,
@@ -688,7 +688,7 @@ const static isaac_ctx_t zero_initialised_ctx = {
 };
 
 const static isaac_ctx_t nonzero_initialised_ctx = {
-        .next_index = 0,
+        .stream_index = 0,
         .a = 0xD131EDD6UL,
         .b = 0x23956226UL,
         .c = 0x00000001UL,
