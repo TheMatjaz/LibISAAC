@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
 project(LibISAAC
-        VERSION 0.1.0
+        VERSION 1.0.0
         LANGUAGES C
         DESCRIPTION
-        "A modern wrapping of the ISAAC CPRNG.")
+        "A modern reimplementation of the ISAAC CPRNG.")
 
 # Unless specified, by default create Release builds
 if (NOT CMAKE_BUILD_TYPE)
@@ -43,11 +43,12 @@ include_directories(inc/)
 set(LIB_FILES src/isaac.c)
 include_directories(tst/ tst/atto/)
 set(TEST_FILES
+        tst/atto/atto.c
         tst/test.c
         tst/test_init.c
         tst/test_stream.c
         tst/test_convert.c
-        tst/atto/atto.c tst/test_cleanup.c)
+        tst/test_cleanup.c)
 
 add_library(isaac32 STATIC ${LIB_FILES})
 target_compile_definitions(isaac32 PUBLIC ISAAC_BITS=32)
@@ -57,14 +58,6 @@ add_executable(testisaac32 ${LIB_FILES} ${TEST_FILES})
 target_compile_definitions(testisaac32 PUBLIC ISAAC_BITS=32)
 add_executable(testisaac64 ${LIB_FILES} ${TEST_FILES})
 target_compile_definitions(testisaac64 PUBLIC ISAAC_BITS=64)
-
-include_directories(tst/original/)
-add_executable("generatevectors32"
-        tst/original/generate32.c
-        tst/original/randport.c)
-add_executable("generatevectors64"
-        tst/original/generate64.c
-        tst/original/isaac64.c)
 
 # Doxygen documentation builder
 find_package(Doxygen)
