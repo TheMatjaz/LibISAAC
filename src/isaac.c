@@ -90,7 +90,7 @@ void isaac_init(isaac_ctx_t* const ctx,
     }
     isaac_uint_t a, b, c, d, e, f, g, h;
     uint_fast16_t i; /* Fastest index over elements in result[] and mem[]. */
-    ctx->a = ctx->b = ctx->c = 0;
+    ctx->next_index = ctx->a = ctx->b = ctx->c = 0;
     a = b = c = d = e = f = g = h = GOLDEN_RATIO;
     /* Scramble it */
     for (i = 0; i < 4; i++)
@@ -143,7 +143,7 @@ void isaac_init(isaac_ctx_t* const ctx,
     /* Fill in the first set of results. */
     isaac_shuffle(ctx);
     /* Prepare to use the first set of results with next32() and next8(). */
-    ctx->next_index = ISAAC_ELEMENTS - 1;
+
 }
 
 /**

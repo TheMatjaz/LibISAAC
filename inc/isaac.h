@@ -105,7 +105,7 @@ typedef struct
  * Providing a seed with low entropy will result in the whole CSPRNG to be
  * weak.
  *
- * @param ctx the ISAAC state to be initialised.
+ * @param ctx the ISAAC state to be initialised. Does nothing when NULL.
  * @param seed pointer to the seed to use, which is copied into the context.
  * - If NULL, then a zero seed is used instead (**insecure!**)
  * @param seed_bytes amount of **bytes** in the seed, max #ISAAC_SEED_MAX_BYTES.
@@ -135,7 +135,8 @@ void isaac_init(isaac_ctx_t* ctx, const uint8_t* seed, uint16_t seed_bytes);
  * more expensive.
  *
  * @param[in, out] ctx the ISAAC state, already initialised.
- * @param[out] ints pseudo-random integers.
+ * Does nothing when NULL.
+ * @param[out] ints pseudo-random integers. Does nothing when NULL.
  * @param[in] amount quantity of 32-bit/64-bit integers to generate.
  */
 void isaac_stream(isaac_ctx_t* ctx, isaac_uint_t* ints, size_t amount);
@@ -149,7 +150,7 @@ void isaac_stream(isaac_ctx_t* ctx, isaac_uint_t* ints, size_t amount);
  * There is no need to call this function before using isaac_init(), including
  * when re-initing an existing context.
  *
- * @param[in] ctx the ISAAC state to cleanup.
+ * @param[in] ctx the ISAAC state to cleanup. Does nothing when NULL.
  */
 void isaac_cleanup(isaac_ctx_t* ctx);
 
@@ -160,8 +161,9 @@ void isaac_cleanup(isaac_ctx_t* ctx);
  * Useful to convert a stream of 32-bit/64-bit integers to 8-bit values.
  *
  * @param[out] bytes 8-bit integers. Must be at least \p amount_of_values*4
- * bytes long.
- * @param[in] values 32-bit/64-bit integers, as obtained from isaac_stream()
+ * bytes long. Does nothing when NULL.
+ * @param[in] values 32-bit/64-bit integers, as obtained from isaac_stream().
+ * Does nothing when NULL.
  * @param[in] amount_of_values quantity of 32-bit/64-bit integers in the
  * \p values buffer.
  */
@@ -176,8 +178,9 @@ void isaac_to_little_endian(uint8_t* bytes,
  * Useful to convert a stream of 32-bit/64-bit integers to 8-bit values.
  *
  * @param[out] bytes 8-bit integers. Must be at least \p amount_of_values*4
- * bytes long.
- * @param[in] values 32-bit/64-bit integers, as obtained from isaac_stream()
+ * bytes long. Does nothing when NULL.
+ * @param[in] values 32-bit/64-bit integers, as obtained from isaac_stream().
+ * Does nothing when NULL.
  * @param[in] amount_of_values quantity of 32-bit/64-bit integers in the
  * \p values buffer.
  */
