@@ -239,32 +239,28 @@ static void isaac_shuffle(isaac_ctx_t* const ctx)
 
 #define ISAAC_MIN(a, b) ((a) < (b)) ? (a) : (b)
 
-// TODO consider inverting the stream, i.e. reading from result from index 0
-// towards the end instead of vice versa, to improve cache usage.
-
 void isaac_stream(isaac_ctx_t* const ctx, isaac_uint_t* ints, size_t amount)
 {
     if (ctx == NULL || ints == NULL)
     {
         return;
     }
-    do
+    uint_fast16_t available;
+    while (amount)
     {
-        const size_t available = ISAAC_MIN(ctx->next_index + 1, amount);
-        for (uint_fast16_t i = 0; i < available; i++)
-        {
-            *ints++ = ctx->result[ctx->next_index--];
-        }
+        available = ISAAC_MIN(ISAAC_ELEMENTS - ctx->next_index, amount);
         amount -= available;
+        while (available--)
+        {
+            *ints++ = ctx->result[ctx->next_index++];
+        };
         if (ctx->next_index >= ISAAC_ELEMENTS)
         {
-            /* next_index underflow, thus out of elements. Reshuffling
-             * and preparing new batch of elements. */
+            /* Out of elements. Reshuffling and preparing new batch. */
             isaac_shuffle(ctx);
-            ctx->next_index = ISAAC_ELEMENTS - 1;
+            ctx->next_index = 0;
         }
     }
-    while (amount);
 }
 
 #define ISAAC_CTX_LEN_IN_UINTS (sizeof(isaac_ctx_t) / sizeof(isaac_uint_t))

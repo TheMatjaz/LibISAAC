@@ -20,11 +20,11 @@
 
 static void print_ctx(const randctx* const ctx)
 {
-    printf(".cnt = 0x%08XUL,\n", ctx->randcnt);
+    printf(".next_index = 0x%08XUL,\n", 0);
     printf(".a = 0x%08XUL,\n", ctx->randa);
     printf(".b = 0x%08XUL,\n", ctx->randb);
     printf(".c = 0x%08XUL,\n", ctx->randc);
-    printf(".rsl = {");
+    printf(".result = {");
     for (unsigned int i = 0; i < RANDSIZ; i++)
     {
         printf("0x%08XUL, ", ctx->randrsl[i]);
@@ -49,14 +49,6 @@ static void ctx_zero_seed(void)
     print_ctx(&ctx);
 }
 
-static void ctx_no_init(void)
-{
-    randctx ctx;
-    randinit(&ctx, 0); // Init ISAAC without a seed
-    puts("Context with no seed:");
-    print_ctx(&ctx);
-}
-
 static void ctx_nonzero_seed(void)
 {
     randctx ctx;
@@ -75,30 +67,31 @@ static void ctx_nonzero_seed(void)
     print_ctx(&ctx);
 }
 
-static void next_values_zero_seed(void)
+static void stream_from_zero_seed(void)
 {
     randctx ctx;
-    unsigned long int i;
-    unsigned long int next;
+    unsigned long int i, j;
     for (i = 0; i < 256; i++)
     {
         ctx.randrsl[i] = 0;  // Zero seed
     }
     randinit(&ctx, 1);  // Init ISAAC with zero seed
-    puts("Running next() 512 times with zero seed");
-    for (i = 0; i < 512; i++)
+    puts("Getting stream of 512 values from zero seed");
+    for (j = 0; j < 2; j++)
     {
-        next = rand(&ctx);
-        printf("0x%08lXUL, ", next);
+        for (i = 0; i < 256; i++)
+        {
+            printf("0x%08XUL, ", ctx.randrsl[i]);
+        }
+        isaac(&ctx);
     }
     puts("");
 }
 
-static void next_values_nonzero_seed(void)
+static void stream_from_nonzero_seed(void)
 {
     randctx ctx;
-    unsigned long int i;
-    unsigned long int next;
+    unsigned long int i, j;
     const unsigned char seed[8] = {1, 2, 3, 4, 5, 6, 7, 8};
     for (i = 0; i < 8; i++)
     {
@@ -109,20 +102,23 @@ static void next_values_nonzero_seed(void)
         ctx.randrsl[i] = 0;  // Zero padding
     }
     randinit(&ctx, 1);  // Init ISAAC with non-zero seed
-    puts("Running next() 512 times with non-zero seed");
-    for (i = 0; i < 512; i++)
+    puts("Getting stream of 512 values from non-zero seed");
+    for (j = 0; j < 2; j++)
     {
-        next = rand(&ctx);
-        printf("0x%08lXUL, ", next);
+        for (i = 0; i < 256; i++)
+        {
+            printf("0x%08XUL, ", ctx.randrsl[i]);
+        }
+        isaac(&ctx);
     }
+    puts("");
 }
 
 int main(void)
 {
     ctx_zero_seed();
-    ctx_no_init();
     ctx_nonzero_seed();
-    next_values_zero_seed();
-    next_values_nonzero_seed();
+    stream_from_zero_seed();
+    stream_from_nonzero_seed();
     return 0;
 }
