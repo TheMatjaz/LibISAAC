@@ -836,6 +836,10 @@ static void test_init_zero_seed(void)
     atto_eq(sizeof(ctx), sizeof(zero_initialised_ctx));
     atto_memeq(&ctx, &zero_initialised_ctx, sizeof(ctx));
 
+    isaac_init(&ctx, NULL, 0);
+    atto_eq(sizeof(ctx), sizeof(zero_initialised_ctx));
+    atto_memeq(&ctx, &zero_initialised_ctx, sizeof(ctx));
+
     uint8_t dummy[3] = {1, 2, 3};
     isaac_init(&ctx, dummy, 0);
     atto_eq(sizeof(ctx), sizeof(zero_initialised_ctx));
