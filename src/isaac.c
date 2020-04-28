@@ -14,6 +14,36 @@
 
 #include "isaac.h"
 
+#if ISAAC_BITS > 32
+#define ISAAC_IND(mm, x)  (*(uint64_t*)((uint8_t*)(mm) \
+                          + ((x) & ((ISAAC_ELEMENTS - 1) << 3))))
+
+#define ISAAC_STEP(mix, a, b, mm, m, m2, r, x) \
+{ \
+  x = *m;  \
+  a = (mix) + *(m2++); \
+  *(m++) = y = ISAAC_IND(mm, x) + a + b; \
+  *(r++) = b = ISAAC_IND(mm, y >> 8U) + x; \
+}
+
+#define ISAAC_MIX(a, b, c, d, e, f, g, h) \
+{ \
+   a -= e; f ^= h >> 9U;  h += a; \
+   b -= f; g ^= a << 9U;  a += b; \
+   c -= g; h ^= b >> 23U; b += c; \
+   d -= h; a ^= c << 15U; c += d; \
+   e -= a; b ^= d >> 14U; d += e; \
+   f -= b; c ^= e << 20U; e += f; \
+   g -= c; d ^= f >> 17U; f += g; \
+   h -= d; e ^= g << 14U; g += h; \
+}
+
+/* Explanations why it does not look like 1.618033988749894848...:
+ * https://stackoverflow.com/a/4948967
+ * https://softwareengineering.stackexchange.com/a/63605
+ */
+#define GOLDEN_RATIO 0x9e3779b97f4a7c13LL
+#else
 #define ISAAC_IND(mm, x) ((mm)[(x >> 2U) & (ISAAC_ELEMENTS - 1)])
 
 #define ISAAC_STEP(mix, a, b, mm, m, m2, r, x) \
@@ -40,7 +70,10 @@
  * https://stackoverflow.com/a/4948967
  * https://softwareengineering.stackexchange.com/a/63605
  */
-#define GOLDEN_RATIO 0x9e3779b9
+#define GOLDEN_RATIO 0x9e3779b9L
+#endif
+
+
 
 static void isaac_shuffle(isaac_ctx_t* ctx);
 
@@ -56,7 +89,7 @@ void isaac_init(isaac_ctx_t* const ctx,
     {
         return;
     }
-    uint32_t a, b, c, d, e, f, g, h;
+    isaac_uint_t a, b, c, d, e, f, g, h;
     uint_fast16_t i; /* Fastest index over elements in result[] and mem[]. */
     ctx->a = ctx->b = ctx->c = 0;
     a = b = c = d = e = f = g = h = GOLDEN_RATIO;
@@ -161,16 +194,31 @@ static void set_seed(isaac_ctx_t* const ctx,
  */
 static void isaac_shuffle(isaac_ctx_t* const ctx)
 {
-    uint32_t* m;
-    uint32_t* mm = ctx->mem;
-    uint32_t* m2;
-    uint32_t* r = ctx->result;
-    uint32_t* mend;
-    uint32_t a = ctx->a;
-    uint32_t b = ctx->b + (++ctx->c);
-    uint32_t x;
-    uint32_t y;
-
+    isaac_uint_t* m;
+    isaac_uint_t* mm = ctx->mem;
+    isaac_uint_t* m2;
+    isaac_uint_t* r = ctx->result;
+    isaac_uint_t* mend;
+    isaac_uint_t a = ctx->a;
+    isaac_uint_t b = ctx->b + (++ctx->c);
+    isaac_uint_t x;
+    isaac_uint_t y;
+#if ISAAC_BITS > 32
+    for (m = mm, mend = m2 = m + (ISAAC_ELEMENTS / 2U); m < mend;)
+    {
+        ISAAC_STEP(~(a ^ (a << 21U)), a, b, mm, m, m2, r, x);
+        ISAAC_STEP(a ^ (a >> 5U), a, b, mm, m, m2, r, x);
+        ISAAC_STEP(a ^ (a << 12U), a, b, mm, m, m2, r, x);
+        ISAAC_STEP(a ^ (a >> 33U), a, b, mm, m, m2, r, x);
+    }
+    for (m2 = mm; m2 < mend;)
+    {
+        ISAAC_STEP(~(a ^ (a << 21U)), a, b, mm, m, m2, r, x);
+        ISAAC_STEP(a ^ (a >> 5U), a, b, mm, m, m2, r, x);
+        ISAAC_STEP(a ^ (a << 12U), a, b, mm, m, m2, r, x);
+        ISAAC_STEP(a ^ (a >> 33U), a, b, mm, m, m2, r, x);
+    }
+#else
     for (m = mm, mend = m2 = m + (ISAAC_ELEMENTS / 2U); m < mend;)
     {
         ISAAC_STEP(a << 13U, a, b, mm, m, m2, r, x);
@@ -185,13 +233,14 @@ static void isaac_shuffle(isaac_ctx_t* const ctx)
         ISAAC_STEP(a << 2U, a, b, mm, m, m2, r, x);
         ISAAC_STEP(a >> 16U, a, b, mm, m, m2, r, x);
     }
+#endif
     ctx->b = b;
     ctx->a = a;
 }
 
 #define isaac_min(a, b) ((a) < (b)) ? (a) : (b)
 
-void isaac_stream(isaac_ctx_t* const ctx, uint32_t* ints, size_t amount)
+void isaac_stream(isaac_ctx_t* const ctx, isaac_uint_t* ints, size_t amount)
 {
     if (ctx == NULL || ints == NULL)
     {
@@ -217,7 +266,7 @@ void isaac_stream(isaac_ctx_t* const ctx, uint32_t* ints, size_t amount)
 }
 
 void isaac_to_little_endian(uint8_t* bytes,
-                            const uint32_t* values,
+                            const isaac_uint_t* values,
                             size_t amount_of_values)
 {
     if (bytes == NULL || values == NULL)
@@ -230,13 +279,20 @@ void isaac_to_little_endian(uint8_t* bytes,
             *bytes++ = (uint8_t) (*values);
             *bytes++ = (uint8_t) (*values >> 8U);
             *bytes++ = (uint8_t) (*values >> 16U);
-            *bytes++ = (uint8_t) (*values++ >> 24U);
+            *bytes++ = (uint8_t) (*values >> 24U);
+#if ISAAC_BITS > 32
+            *bytes++ = (uint8_t) (*values >> 32U);
+            *bytes++ = (uint8_t) (*values >> 40U);
+            *bytes++ = (uint8_t) (*values >> 48U);
+            *bytes++ = (uint8_t) (*values >> 56U);
+#endif
+            values++;
         }
     }
 }
 
 void isaac_to_big_endian(uint8_t* bytes,
-                         const uint32_t* values,
+                         const isaac_uint_t* values,
                          size_t amount_of_values)
 {
     if (bytes == NULL || values == NULL)
@@ -245,6 +301,12 @@ void isaac_to_big_endian(uint8_t* bytes,
     }
     while (amount_of_values--)
     {
+#if ISAAC_BITS > 32
+        *bytes++ = (uint8_t) (*values >> 56U);
+        *bytes++ = (uint8_t) (*values >> 48U);
+        *bytes++ = (uint8_t) (*values >> 40U);
+        *bytes++ = (uint8_t) (*values >> 32U);
+#endif
         *bytes++ = (uint8_t) (*values >> 24U);
         *bytes++ = (uint8_t) (*values >> 16U);
         *bytes++ = (uint8_t) (*values >> 8U);

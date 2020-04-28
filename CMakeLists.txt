@@ -40,7 +40,7 @@ set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} \
         -funroll-loops")
 
 include_directories(inc/)
-set(LIB_FILES src/isaac64.c)
+set(LIB_FILES src/isaac.c)
 include_directories(tst/ tst/atto/)
 set(TEST_FILES
         tst/test.c
@@ -59,9 +59,12 @@ add_executable(testisaac64 ${LIB_FILES} ${TEST_FILES})
 target_compile_definitions(testisaac64 PUBLIC ISAAC_BITS=64)
 
 include_directories(tst/original/)
-add_executable("generatevectors"
+add_executable("generatevectors32"
         tst/original/generate.c
         tst/original/randport.c)
+add_executable("generatevectors64"
+        tst/original/generate64.c
+        tst/original/isaac64.c)
 
 # Doxygen documentation builder
 find_package(Doxygen)
