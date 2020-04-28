@@ -1,7 +1,7 @@
 /**
  * @file
  *
- * Test suite of LibISAAC
+ * Test suite of LibISAAC, testing isaac_init().
  *
  * @copyright Copyright © 2020, Matjaž Guštin <dev@matjaz.it>
  * <https://matjaz.it>. All rights reserved.

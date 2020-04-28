@@ -1,7 +1,7 @@
 /**
  * @file
  *
- * Test suite of LibISAAC
+ * Test suite of LibISAAC, testing functions converting isaac_uint_t to bytes.
  *
  * @copyright Copyright © 2020, Matjaž Guštin <dev@matjaz.it>
  * <https://matjaz.it>. All rights reserved.
@@ -101,7 +101,6 @@ static void test_to_big_endian(void)
 }
 
 #endif
-
 
 void test_isaac_convert(void)
 {

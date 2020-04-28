@@ -47,7 +47,7 @@ set(TEST_FILES
         tst/test_init.c
         tst/test_stream.c
         tst/test_convert.c
-        tst/atto/atto.c)
+        tst/atto/atto.c tst/test_cleanup.c)
 
 add_library(isaac32 STATIC ${LIB_FILES})
 target_compile_definitions(isaac32 PUBLIC ISAAC_BITS=32)
@@ -60,7 +60,7 @@ target_compile_definitions(testisaac64 PUBLIC ISAAC_BITS=64)
 
 include_directories(tst/original/)
 add_executable("generatevectors32"
-        tst/original/generate.c
+        tst/original/generate32.c
         tst/original/randport.c)
 add_executable("generatevectors64"
         tst/original/generate64.c

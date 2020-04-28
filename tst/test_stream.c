@@ -1,7 +1,7 @@
 /**
  * @file
  *
- * Test suite of LibISAAC
+ * Test suite of LibISAAC, testing isaac_stream().
  *
  * @copyright Copyright © 2020, Matjaž Guštin <dev@matjaz.it>
  * <https://matjaz.it>. All rights reserved.
@@ -606,6 +606,7 @@ static void test_stream_with_zero_seed(void)
     isaac_stream(&ctx, stream, 300);
 
     atto_neq(stream[0], 0);
+    atto_eq(stream[0], expected_stream_with_zero_seed[0]);
     atto_memeq(stream, expected_stream_with_zero_seed,
                300 * sizeof(isaac_uint_t));
     atto_eq(ctx.next_index, 256 * 2 - 300 - 1);

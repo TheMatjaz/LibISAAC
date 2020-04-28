@@ -74,7 +74,6 @@
 #endif
 
 
-
 static void isaac_shuffle(isaac_ctx_t* ctx);
 
 static void set_seed(isaac_ctx_t* ctx,
@@ -238,7 +237,10 @@ static void isaac_shuffle(isaac_ctx_t* const ctx)
     ctx->a = a;
 }
 
-#define isaac_min(a, b) ((a) < (b)) ? (a) : (b)
+#define ISAAC_MIN(a, b) ((a) < (b)) ? (a) : (b)
+
+// TODO consider inverting the stream, i.e. reading from result from index 0
+// towards the end instead of vice versa, to improve cache usage.
 
 void isaac_stream(isaac_ctx_t* const ctx, isaac_uint_t* ints, size_t amount)
 {
@@ -248,7 +250,7 @@ void isaac_stream(isaac_ctx_t* const ctx, isaac_uint_t* ints, size_t amount)
     }
     do
     {
-        const size_t available = isaac_min(ctx->next_index + 1, amount);
+        const size_t available = ISAAC_MIN(ctx->next_index + 1, amount);
         for (uint_fast16_t i = 0; i < available; i++)
         {
             *ints++ = ctx->result[ctx->next_index--];
@@ -263,6 +265,27 @@ void isaac_stream(isaac_ctx_t* const ctx, isaac_uint_t* ints, size_t amount)
         }
     }
     while (amount);
+}
+
+#define ISAAC_CTX_LEN_IN_UINTS (sizeof(isaac_ctx_t) / sizeof(isaac_uint_t))
+_Static_assert(
+        sizeof(isaac_ctx_t) % sizeof(isaac_uint_t) == 0,
+        "The ISAAC context size must be divisible by isaac_uint_t, otherwise "
+        "the cleanup function will write beyond its end.");
+
+void isaac_cleanup(isaac_ctx_t* const ctx)
+{
+    if (ctx == NULL)
+    {
+        return;
+    }
+    isaac_uint_t* casted = (isaac_uint_t*) ctx;
+    const isaac_uint_t* const end = casted + ISAAC_CTX_LEN_IN_UINTS;
+    do
+    {
+        *casted++ = 0UL;
+    }
+    while (casted < end);
 }
 
 void isaac_to_little_endian(uint8_t* bytes,

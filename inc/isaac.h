@@ -47,7 +47,7 @@ typedef uint32_t isaac_uint_t;
 #elif (ISAAC_BITS == 64)
 typedef uint64_t isaac_uint_t;
 #else
-_Static_assert(0, "Only 32 or 64 bit words are supported.");
+_Static_assert(0, "ISAAC: only 32 or 64 bit words are supported.");
 #endif
 
 #define ISAAC_ELEMENTS 256U
@@ -68,8 +68,8 @@ typedef struct
     /**
      * Index of the next value to output in the stream.
      *
-     * Note: this value could be a uint16_t instead of a isaac_uint_t, but by using
-     * a isaac_uint_t we avoid any padding at the end of the struct.
+     * Note: this value could be a uint16_t instead of a isaac_uint_t, but by
+     * using an isaac_uint_t we avoid any padding at the end of the struct.
      */
     isaac_uint_t next_index;
 } isaac_ctx_t;
@@ -138,7 +138,20 @@ void isaac_init(isaac_ctx_t* ctx, const uint8_t* seed, uint16_t seed_bytes);
  * @param[out] ints pseudo-random integers.
  * @param[in] amount quantity of 32-bit/64-bit integers to generate.
  */
-void isaac_stream(isaac_ctx_t* const ctx, isaac_uint_t* ints, size_t amount);
+void isaac_stream(isaac_ctx_t* ctx, isaac_uint_t* ints, size_t amount);
+
+/**
+ * Safely erases the context.
+ *
+ * Useful to avoid leaking information about the seed or the state after
+ * finishing using ISAAC.
+ *
+ * There is no need to call this function before using isaac_init(), including
+ * when re-initing an existing context.
+ *
+ * @param[in] ctx the ISAAC state to cleanup.
+ */
+void isaac_cleanup(isaac_ctx_t* ctx);
 
 /**
  * Utility function, converting an array of 32-bit/64-bit integers into bytes
