@@ -99,7 +99,7 @@ void isaac_init(isaac_ctx_t* const ctx,
     }
     set_seed(ctx, seed, seed_bytes);
     /* Initialise using the contents of result[] as the seed. */
-    for (i = 0; i < ISAAC_ELEMENTS; i += 8)
+    for (i = 0; i < ISAAC_ELEMENTS; i = (uint_fast16_t) (i+8))
     {
         a += ctx->result[i + 0];
         b += ctx->result[i + 1];
@@ -120,7 +120,7 @@ void isaac_init(isaac_ctx_t* const ctx,
         ctx->mem[i + 7] = h;
     }
     /* Do a second pass to make all of the seed affect all of ctx->mem. */
-    for (i = 0; i < ISAAC_ELEMENTS; i += 8)
+    for (i = 0; i < ISAAC_ELEMENTS; i = (uint_fast16_t) (i+8))
     {
         a += ctx->mem[i + 0];
         b += ctx->mem[i + 1];
@@ -245,7 +245,7 @@ void isaac_stream(isaac_ctx_t* const ctx, isaac_uint_t* ints, size_t amount)
     {
         return;
     }
-    uint_fast16_t available;
+    size_t available;
     while (amount)
     {
         available = ISAAC_MIN(ISAAC_ELEMENTS - ctx->stream_index, amount);
