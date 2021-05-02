@@ -29,9 +29,9 @@ jobs:
       - uses: actions/checkout@v2
       - name: Configure CMake
         run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_C_COMPILER=${{matrix.compiler}}
-      - name: Build
+      - name: Build all targets
         run: cmake --build ${{github.workspace}}/build --parallel 8 --clean-first
-      - name: Test
+      - name: Test with Atto
         working-directory: ${{github.workspace}}/build
         run: ctest --output-on-failure
 
@@ -61,17 +61,20 @@ jobs:
           msystem: ${{ matrix.msystem }}
           install: mingw-w64-x86_64-cmake mingw-w64-x86_64-make
       - name: install GCC
-        run: pacman --no-confirm -S mingw-w64-x86_64-gcc
-        if: ${{ matrix.compiler == 'gcc' }}
+        if: matrix.compiler == 'gcc'
+        run: pacman --noconfirm -S mingw-w64-x86_64-gcc
       - name: install Clang
-        run: pacman --no-confirm -S mingw-w64-x86_64-clang
-        if: ${{ matrix.compiler == 'clang' }}
+        if: matrix.compiler == 'clang'
+        run: pacman --noconfirm -S mingw-w64-x86_64-clang
       - name: Check the compiler version
-        run: ${{ matrix.compiler }} --version
+        run: |
+          cmake --version
+          make --version
+          ${{ matrix.compiler }} --version
       - name: Configure CMake
         run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_C_COMPILER=${{matrix.compiler}} -G "MinGW Makefiles"
-      - name: Build
+      - name: Build all targets
         run: cmake --build ${{github.workspace}}/build --parallel 8 --clean-first
-      - name: Test
+      - name: Test with Atto
         working-directory: ${{github.workspace}}/build
         run: ctest --output-on-failure
