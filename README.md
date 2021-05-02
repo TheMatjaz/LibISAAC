@@ -1,7 +1,8 @@
 ISAAC, the fast CSPRNG, reimplemented in a nicer, documented, modern C11 API
 ===============================================================================
 
-[![Build Status](https://travis-ci.com/TheMatjaz/LibISAAC.svg?branch=master)](https://travis-ci.com/TheMatjaz/LibISAAC)
+[![Build Status Master](https://github.com/TheMatjaz/LibISAAC/actions/workflows/build_master.yml/badge.svg?branch=master)](https://github.com/TheMatjaz/LibISAAC/actions/workflows/build_master.yml)
+[![Build Status Develop](https://github.com/TheMatjaz/LibISAAC/actions/workflows/build_develop.yml/badge.svg?branch=develop)](https://github.com/TheMatjaz/LibISAAC/actions/workflows/build_develop.yml)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/TheMatjaz/LibISAAC)](https://github.com/TheMatjaz/LibISAAC/releases/latest)
 [![GitHub](https://img.shields.io/github/license/TheMatjaz/LibISAAC)](https://github.com/TheMatjaz/LibISAAC/blob/master/LICENSE.md)
 

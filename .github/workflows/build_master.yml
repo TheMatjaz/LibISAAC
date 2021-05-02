@@ -1,15 +1,10 @@
-name: CMake
+# Github actions script to build the project's Master branch (official releases)
+name: Build Master
 
 on:
   push:
     branches:
-      - main
-      - develop
-      - release/*
-  pull_request:
-    branches:
       - master
-      - develop
 
 jobs:
   build_and_test_unixlike:
@@ -59,7 +54,7 @@ jobs:
         with:
           msystem: ${{ matrix.msystem }}
           install: mingw-w64-x86_64-cmake make
-      - name: install GCC
+      - name: Install GCC
         if: matrix.compiler == 'gcc'
         run: pacman --noconfirm -S mingw-w64-x86_64-gcc
       - name: install Clang
