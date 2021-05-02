@@ -62,10 +62,10 @@ jobs:
           install: mingw-w64-x86_64-cmake mingw-w64-x86_64-make
       - name: install GCC
         run: pacman --no-confirm -S mingw-w64-x86_64-gcc
-        if: ${{ ${{matrix.compiler}} == 'gcc' }}
+        if: ${{ matrix.compiler == 'gcc' }}
       - name: install Clang
         run: pacman --no-confirm -S mingw-w64-x86_64-clang
-        if: ${{ ${{matrix.compiler}} == 'clang' }}
+        if: ${{ matrix.compiler == 'clang' }}
       - name: Check the compiler version
         run: ${{ matrix.compiler }} --version
       - name: Configure CMake
