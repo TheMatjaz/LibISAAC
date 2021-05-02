@@ -7,7 +7,7 @@
  * public domain:
  * https://www.burtleburtle.net/bob/c/randport.c
  *
- * @copyright Copyright © 2020, Matjaž Guštin <dev@matjaz.it>
+ * @copyright Copyright © 2020-2021, Matjaž Guštin <dev@matjaz.it>
  * <https://matjaz.it>. All rights reserved.
  * @license BSD 3-clause license.
  */

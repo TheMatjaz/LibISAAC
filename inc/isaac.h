@@ -41,7 +41,7 @@
  * This implementation is based on the original `rand.c` and
  * `isaac64.c`, which uses 32-bit and 64-bit words respectively.
  *
- * @copyright Copyright © 2020, Matjaž Guštin <dev@matjaz.it>
+ * @copyright Copyright © 2020-2021, Matjaž Guštin <dev@matjaz.it>
  * <https://matjaz.it>. All rights reserved.
  * @license BSD 3-clause license.
  */
