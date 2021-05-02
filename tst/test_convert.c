@@ -3,7 +3,7 @@
  *
  * Test suite of LibISAAC, testing functions converting isaac_uint_t to bytes.
  *
- * @copyright Copyright © 2020, Matjaž Guštin <dev@matjaz.it>
+ * @copyright Copyright © 2020-2021, Matjaž Guštin <dev@matjaz.it>
  * <https://matjaz.it>. All rights reserved.
  * @license BSD 3-clause license.
  */
@@ -11,6 +11,26 @@
 #include "test.h"
 
 #if ISAAC_BITS > 32
+
+static void test_to_little_endian_null(void)
+{
+    const uint64_t values[2] = {0x0102030405060708ULL, 0xAABBCCDD11223344ULL};
+    uint8_t bytes[16] = {0};
+
+    isaac_to_little_endian(NULL, values, 2);
+    isaac_to_little_endian(bytes, NULL, 2);
+    // Does nothing. Mostly to check that it does not crash.
+}
+
+static void test_to_big_endian_null(void)
+{
+    const uint64_t values[2] = {0x0102030405060708ULL, 0xAABBCCDD11223344ULL};
+    uint8_t bytes[16] = {0};
+
+    isaac_to_big_endian(NULL, values, 2);
+    isaac_to_big_endian(bytes, NULL, 2);
+    // Does nothing. Mostly to check that it does not crash.
+}
 
 static void test_to_little_endian(void)
 {
@@ -65,6 +85,26 @@ static void test_to_big_endian(void)
 }
 #else
 
+static void test_to_little_endian_null(void)
+{
+    const uint32_t values[2] = {0x01020304UL, 0xAABBCCDDUL};
+    uint8_t bytes[8] = {0};
+
+    isaac_to_little_endian(NULL, values, 2);
+    isaac_to_little_endian(bytes, NULL, 2);
+    // Does nothing. Mostly to check that it does not crash.
+}
+
+static void test_to_big_endian_null(void)
+{
+    const uint32_t values[2] = {0x01020304UL, 0xAABBCCDDUL};
+    uint8_t bytes[8] = {0};
+
+    isaac_to_big_endian(NULL, values, 2);
+    isaac_to_big_endian(bytes, NULL, 2);
+    // Does nothing. Mostly to check that it does not crash.
+}
+
 static void test_to_little_endian(void)
 {
     const uint32_t values[2] = {0x01020304UL, 0xAABBCCDDUL};
@@ -104,6 +144,8 @@ static void test_to_big_endian(void)
 
 void test_isaac_convert(void)
 {
+    test_to_little_endian_null();
+    test_to_big_endian_null();
     test_to_little_endian();
     test_to_big_endian();
 }

@@ -1,10 +1,15 @@
 ISAAC, the fast CSPRNG, reimplemented in a nicer, documented, modern C11 API
 ===============================================================================
 
+[![Build Status](https://travis-ci.com/TheMatjaz/LibISAAC.svg?branch=master)](https://travis-ci.com/TheMatjaz/LibISAAC)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/TheMatjaz/LibISAAC)](https://github.com/TheMatjaz/LibISAAC/releases/latest)
+[![GitHub](https://img.shields.io/github/license/TheMatjaz/LibISAAC)](https://github.com/TheMatjaz/LibISAAC/blob/master/LICENSE.md)
+
 LibISAAC offers the tiny and fast
 [ISAAC](https://www.burtleburtle.net/bob/rand/isaacafa.html) cryptographically
 secure pseudo random number generator (CSPRNG), in its 32-bit and 64-bit version
-wrapped into a modern, ISO C11, documented API, ready for embedded usage.
+wrapped into a modern, ISO C11, documented API, ready for embedded usage,
+with 100% test coverage.
 
 
 
@@ -97,29 +102,45 @@ Examples:
   `ISAAC=BITS=32` to get the same output.
 
 
+
+Compiling
+----------------------------------------
+
+
 ### Static source inclusion
 
-Copy the `inc/isaac.h` and `src/isaac.c` files into your existing
-C project, add them to the source folders and compile..
+If you just want to compile manually from sources in your existing project:
 
-If you prefer a specific bitness, redefine `ISAAC_BITS` in the header file.
+- Copy the `inc` and `src` folders (or their content) into your existing
+  C project.
+- Add `inc` to the include folders list.
+- Add `src` to the sources folders list.
+- Compile.
+
+If you prefer a specific bitness, redefine `ISAAC_BITS`.
 
 
-### Compiling into all possible targets
+### Compiling ISAAC into all possible targets with CMake
 
 ```
 mkdir build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DISAAC_BITS=32
-cmake --build .
+cmake .. -DCMAKE_BUILD_TYPE=Release
+cmake --build . --parallel 8
 ```
 
 This will build all targets:
 
-- a `libisaac32.a` static library
-- a test runner executable `testisaac32`
-- the Doxygen documentation (if Doxygen is installed)
+- static libraries: `isaac32`, `isaac64`
+- shared libraries: `isaac32shared`, `isaac64shared`
+- test runners: `testisaac32`, `testisaac64`, `testisaac32shared`, 
+  `testisaac64shared`, testing respectively the static and shared libraries
+- a `libisaac64shared.a` shared library
+
+Doxygen (if installed) is built separately to avoid recompiling it for any
+library change:
+```
+cmake --build . --target doxygen
+```
 
 To compile with the optimisation for size, use the
 `-DCMAKE_BUILD_TYPE=MinSizeRel` flag instead.
-
-If you prefer using 64 bit integers, set `-DISAAC_BITS=64`.
