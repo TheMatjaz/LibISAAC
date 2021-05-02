@@ -828,6 +828,12 @@ const static isaac_ctx_t nonzero_initialised_ctx = {
 
 #endif
 
+static void test_init_null(void)
+{
+    isaac_init(NULL, NULL, 0);
+    // Does nothing. Mostly to check that it does not crash.
+}
+
 static void test_init_zero_seed(void)
 {
     isaac_ctx_t ctx;
@@ -846,6 +852,17 @@ static void test_init_zero_seed(void)
     atto_memeq(&ctx, &zero_initialised_ctx, sizeof(ctx));
 }
 
+static void test_init_zero_seed_too_long_is_clipped(void)
+{
+    isaac_ctx_t ctx;
+    const uint8_t seed[ISAAC_SEED_MAX_BYTES + 100] = {0};
+
+    isaac_init(&ctx, seed, ISAAC_SEED_MAX_BYTES + 100);
+
+    atto_eq(sizeof(ctx), sizeof(zero_initialised_ctx));
+    atto_memeq(&ctx, &zero_initialised_ctx, sizeof(ctx));
+}
+
 static void test_init_nonzero_seed(void)
 {
     isaac_ctx_t ctx;
@@ -859,6 +876,8 @@ static void test_init_nonzero_seed(void)
 
 void test_isaac_init(void)
 {
+    test_init_null();
     test_init_zero_seed();
+    test_init_zero_seed_too_long_is_clipped();
     test_init_nonzero_seed();
 }

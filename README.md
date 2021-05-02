@@ -8,7 +8,8 @@ ISAAC, the fast CSPRNG, reimplemented in a nicer, documented, modern C11 API
 LibISAAC offers the tiny and fast
 [ISAAC](https://www.burtleburtle.net/bob/rand/isaacafa.html) cryptographically
 secure pseudo random number generator (CSPRNG), in its 32-bit and 64-bit version
-wrapped into a modern, ISO C11, documented API, ready for embedded usage.
+wrapped into a modern, ISO C11, documented API, ready for embedded usage,
+with 100% test coverage.
 
 
 

@@ -598,6 +598,18 @@ const static isaac_uint_t expected_stream_with_nonzero_seed[EXPECTED_NEXT_ELEMEN
 
 #endif
 
+static void test_stream_null(void)
+{
+    isaac_ctx_t ctx;
+    isaac_init(&ctx, NULL, 0);  // Zero seed
+    isaac_uint_t stream[300] = {0};
+
+    isaac_stream(NULL, stream, 300);
+    isaac_stream(&ctx, NULL, 300);
+    // Does nothing. Mostly to check that it does not crash.
+}
+
+
 static void test_stream_with_zero_seed(void)
 {
     isaac_ctx_t ctx;
@@ -665,6 +677,7 @@ static void test_stream_with_nonzero_seed_multiple_calls(void)
 
 void test_isaac_next(void)
 {
+    test_stream_null();
     test_stream_with_zero_seed();
     test_stream_with_zero_seed_multiple_calls();
     test_stream_with_nonzero_seed();

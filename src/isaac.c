@@ -99,7 +99,7 @@ void isaac_init(isaac_ctx_t* const ctx,
     }
     set_seed(ctx, seed, seed_bytes);
     /* Initialise using the contents of result[] as the seed. */
-    for (i = 0; i < ISAAC_ELEMENTS; i = (uint_fast16_t) (i+8))
+    for (i = 0; i < ISAAC_ELEMENTS; i = (uint_fast16_t) (i + 8))
     {
         a += ctx->result[i + 0];
         b += ctx->result[i + 1];
@@ -120,7 +120,7 @@ void isaac_init(isaac_ctx_t* const ctx,
         ctx->mem[i + 7] = h;
     }
     /* Do a second pass to make all of the seed affect all of ctx->mem. */
-    for (i = 0; i < ISAAC_ELEMENTS; i = (uint_fast16_t) (i+8))
+    for (i = 0; i < ISAAC_ELEMENTS; i = (uint_fast16_t) (i + 8))
     {
         a += ctx->mem[i + 0];
         b += ctx->mem[i + 1];
@@ -142,8 +142,7 @@ void isaac_init(isaac_ctx_t* const ctx,
     }
     /* Fill in the first set of results. */
     isaac_shuffle(ctx);
-    /* Prepare to use the first set of results with next32() and next8(). */
-
+    /* Prepared to use the first set of results. */
 }
 
 /**
@@ -275,13 +274,21 @@ void isaac_cleanup(isaac_ctx_t* const ctx)
     {
         return;
     }
-    isaac_uint_t* casted = (isaac_uint_t*) ctx;
-    const isaac_uint_t* const end = casted + ISAAC_CTX_LEN_IN_UINTS;
+    // Prefer memset_s if available, as it cannot be optimised out by the
+    // compiler. Otherwise use a manual loop over volatile data to have a bit
+    // more assurance it will actually cleanup.
+    // https://www.daemonology.net/blog/2014-09-04-how-to-zero-a-buffer.html
+#if defined(memset_s)
+    memset_s(ctx, sizeof(isaac_ctx_t), 0, isaac_ctx_t);
+#else
+    volatile isaac_uint_t* casted = (isaac_uint_t*) ctx;
+    const volatile isaac_uint_t* const end = casted + ISAAC_CTX_LEN_IN_UINTS;
     do
     {
         *casted++ = 0UL;
     }
     while (casted < end);
+#endif
 }
 
 void isaac_to_little_endian(uint8_t* bytes,
@@ -292,21 +299,19 @@ void isaac_to_little_endian(uint8_t* bytes,
     {
         return;
     }
+    while (amount_of_values--)
     {
-        while (amount_of_values--)
-        {
-            *bytes++ = (uint8_t) (*values);
-            *bytes++ = (uint8_t) (*values >> 8U);
-            *bytes++ = (uint8_t) (*values >> 16U);
-            *bytes++ = (uint8_t) (*values >> 24U);
+        *bytes++ = (uint8_t) (*values);
+        *bytes++ = (uint8_t) (*values >> 8U);
+        *bytes++ = (uint8_t) (*values >> 16U);
+        *bytes++ = (uint8_t) (*values >> 24U);
 #if ISAAC_BITS > 32
-            *bytes++ = (uint8_t) (*values >> 32U);
-            *bytes++ = (uint8_t) (*values >> 40U);
-            *bytes++ = (uint8_t) (*values >> 48U);
-            *bytes++ = (uint8_t) (*values >> 56U);
+        *bytes++ = (uint8_t) (*values >> 32U);
+        *bytes++ = (uint8_t) (*values >> 40U);
+        *bytes++ = (uint8_t) (*values >> 48U);
+        *bytes++ = (uint8_t) (*values >> 56U);
 #endif
-            values++;
-        }
+        values++;
     }
 }
 
