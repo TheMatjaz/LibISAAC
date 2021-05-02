@@ -21,7 +21,6 @@ jobs:
         build_type:
           - Release
           - MinSizeRel
-          - Debug
         compiler:
           - gcc
           - clang
@@ -44,7 +43,6 @@ jobs:
         build_type:
           - Release
           - MinSizeRel
-          - Debug
         compiler:
           - gcc
           - clang
