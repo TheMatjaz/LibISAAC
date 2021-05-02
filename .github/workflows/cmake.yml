@@ -59,7 +59,7 @@ jobs:
       - uses: msys2/setup-msys2@v2
         with:
           msystem: ${{ matrix.msystem }}
-          install: make
+          install: make cmake
       - name: install the compiler with Msys2
         run: pacman --noconfirm -S mingw-w64-i686-gcc
         if: ${{ (matrix.msystem == 'MINGW32') && (matrix.compiler == 'gcc') }}
