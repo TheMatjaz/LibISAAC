@@ -70,9 +70,9 @@ jobs:
           cmake --version
           ${{ matrix.compiler }} --version
       - name: Configure CMake
-        run: cmake -B /C/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_C_COMPILER=${{matrix.compiler}} -G "MSYS Makefiles";
+        run: cmake -B build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DCMAKE_C_COMPILER=${{matrix.compiler}} -G "MSYS Makefiles";
       - name: Build all targets
-        run: cmake --build /C/build --parallel 8 --clean-first
+        run: cmake --build build --parallel 8 --clean-first
       - name: Test with Atto
-        working-directory: /C/build
+        working-directory: build
         run: ctest --output-on-failure
